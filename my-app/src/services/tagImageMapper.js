@@ -1,396 +1,299 @@
-// Map tags to real image URLs with proper CORS headers
-// Using Pexels with attribution-friendly and CORS-safe URLs
+// services/tagImageMapper.js
+
+// Using Unsplash IDs with optimization parameters for better performance and relevance
+const getUnsplashUrl = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+
 export const tagImageMap = {
-  // Computer Science
+  // --- Computer Science & AI ---
   'Machine Learning': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6b8cff',
-    bgColor: '#e8ecff'
+    image: getUnsplashUrl('1555949963-ff9fe0c870eb'), // Neural network visualization
+    color: '#3B82F6',
+    bgColor: '#EFF6FF'
   },
   'Deep Learning': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#8b5cf6',
-    bgColor: '#f3e8ff'
+    image: getUnsplashUrl('1677442120464-5e58c9c74091'), // Abstract AI brain/nodes
+    color: '#8B5CF6',
+    bgColor: '#F5F3FF'
   },
   'Computer Vision': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ec4899',
-    bgColor: '#fce7f3'
+    image: getUnsplashUrl('1526374965328-7f61d4dc18c5'), // Cyberpunk eye/lens
+    color: '#EC4899',
+    bgColor: '#FDF2F8'
   },
   'Natural Language Processing': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f59e0b',
-    bgColor: '#fef3c7'
+    image: getUnsplashUrl('1555421689-491a97ff4181'), // Text/Code analysis
+    color: '#F59E0B',
+    bgColor: '#FFFBEB'
   },
   'Reinforcement Learning': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#10b981',
-    bgColor: '#d1fae5'
+    image: getUnsplashUrl('1535378437261-27fa533c7270'), // Robot/AI interaction
+    color: '#10B981',
+    bgColor: '#ECFDF5'
   },
   'Algorithms & Data Structures': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
+    image: getUnsplashUrl('1509228911820-9171f1e44bbc'), // Mathematical geometric structure
+    color: '#6366F1',
+    bgColor: '#EEF2FF'
   },
   'Distributed Systems': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#0891b2',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1558494949-efc5270f9c63'), // Server farm/connections
+    color: '#0891B2',
+    bgColor: '#ECFEFF'
   },
   'Quantum Computing': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#7c3aed',
-    bgColor: '#ede9fe'
+    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Quantum dilution refrigerator (Gold)
+    color: '#7C3AED',
+    bgColor: '#F5F3FF'
   },
 
-  // Physics & Mathematics
+  // --- Physics & Mathematics ---
   'Quantum Physics': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#7c3aed',
-    bgColor: '#ede9fe'
+    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Quantum rig
+    color: '#7C3AED',
+    bgColor: '#F5F3FF'
   },
   'Theoretical Physics': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#8b5cf6',
-    bgColor: '#f3e8ff'
+    image: getUnsplashUrl('1636466438044-98361c420259'), // Blackboard formulas
+    color: '#8B5CF6',
+    bgColor: '#F5F3FF'
   },
   'Applied Mathematics': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3b82f6',
-    bgColor: '#dbeafe'
+    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Abstract math/geometry
+    color: '#3B82F6',
+    bgColor: '#EFF6FF'
   },
   'Statistical Mechanics': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f97316',
-    bgColor: '#ffedd5'
+    image: getUnsplashUrl('1532094349884-543bc11b234d'), // Particles/Abstract
+    color: '#F97316',
+    bgColor: '#FFF7ED'
   },
   'Topology': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1614730370824-788968953186'), // Abstract shapes/Mobius strip vibe
+    color: '#06B6D4',
+    bgColor: '#ECFEFF'
   },
   'Number Theory': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
+    image: getUnsplashUrl('1596495578062-b361124ebd79'), // Numbers/Math art
+    color: '#6366F1',
+    bgColor: '#EEF2FF'
   },
 
-  // Biology & Medicine
+  // --- Biology & Medicine ---
   'Genomics': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ec4899',
-    bgColor: '#fce7f3'
+    image: getUnsplashUrl('1530026405186-ed1f139313f8'), // DNA Helix
+    color: '#EC4899',
+    bgColor: '#FDF2F8'
   },
   'Neuroscience': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#8b5cf6',
-    bgColor: '#f3e8ff'
+    image: getUnsplashUrl('1559757609-f31090325761'), // Brain scan/neurons
+    color: '#8B5CF6',
+    bgColor: '#F5F3FF'
   },
   'Bioinformatics': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
+    image: getUnsplashUrl('1576086213369-97a306d36557'), // Lab tech/Microscope
     color: '#059669',
-    bgColor: '#d1fae5'
+    bgColor: '#ECFDF5'
   },
   'Drug Discovery': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f43f5e',
-    bgColor: '#ffe4e6'
+    image: getUnsplashUrl('1584328843804-edbfd73c7602'), // Chemical structure/molecules
+    color: '#F43F5E',
+    bgColor: '#FFF1F2'
   },
   'Synthetic Biology': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1532187863486-03cda88e0e4e'), // Petri dishes/Lab
+    color: '#06B6D4',
+    bgColor: '#ECFEFF'
   },
   'Immunology': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#10b981',
-    bgColor: '#d1fae5'
+    image: getUnsplashUrl('1579684385127-1ef15d508118'), // Cells/Microscope
+    color: '#10B981',
+    bgColor: '#ECFDF5'
   },
 
-  // Engineering
+  // --- Engineering ---
   'Robotics': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6b8cff',
-    bgColor: '#e8ecff'
+    image: getUnsplashUrl('1561146126101-3158dc0a4d5e'), // Mechanical arm/Robot
+    color: '#2563EB',
+    bgColor: '#EFF6FF'
   },
   'Materials Science': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1581093450021-4a7360e9a6b5'), // Metallic texture/Carbon fiber
+    color: '#475569',
+    bgColor: '#F1F5F9'
   },
   'Nanotechnology': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#7c3aed',
-    bgColor: '#ede9fe'
+    image: getUnsplashUrl('1562835521-16959a4c0045'), // Microchip closeup
+    color: '#7C3AED',
+    bgColor: '#F5F3FF'
   },
   'Aerospace Engineering': {
-    image: 'https://images.pexels.com/photos/87651/earth-blue-planet-globe-planet-87651.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3b82f6',
-    bgColor: '#dbeafe'
+    image: getUnsplashUrl('1517976487492-5750f3195933'), // Rocket launch
+    color: '#0EA5E9',
+    bgColor: '#E0F2FE'
   },
   'Chemical Engineering': {
-    image: 'https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f59e0b',
-    bgColor: '#fef3c7'
+    image: getUnsplashUrl('1603126857599-f6e157fa2fe6'), // Chemical plant/tubes
+    color: '#F59E0B',
+    bgColor: '#FFFBEB'
   },
   'Electrical Engineering': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#fbbf24',
-    bgColor: '#fef3c7'
+    image: getUnsplashUrl('1555664424-778a69032054'), // Circuit board/Soldering
+    color: '#EAB308',
+    bgColor: '#FEF9C3'
   },
 
-  // Social Sciences
+  // --- Social Sciences ---
   'Economics': {
-    image: 'https://images.pexels.com/photos/3532521/pexels-photo-3532521.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#10b981',
-    bgColor: '#d1fae5'
+    image: getUnsplashUrl('1611974765219-03e921c78953'), // Stock chart/Money
+    color: '#10B981',
+    bgColor: '#ECFDF5'
   },
   'Psychology Research': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f97316',
-    bgColor: '#ffedd5'
+    image: getUnsplashUrl('1507413245164-6160d8298b31'), // Abstract head/thought
+    color: '#F97316',
+    bgColor: '#FFF7ED'
   },
   'Sociology': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1531206715517-5c0ba140b2b8'), // Crowd of people
+    color: '#06B6D4',
+    bgColor: '#ECFEFF'
   },
   'Political Science': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3b82f6',
-    bgColor: '#dbeafe'
-  },
-  'Behavioral Science': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#8b5cf6',
-    bgColor: '#f3e8ff'
+    image: getUnsplashUrl('1541872703-74c5963631df'), // Government building/Pillars
+    color: '#3B82F6',
+    bgColor: '#EFF6FF'
   },
 
-  // Web Development
+  // --- Web Development ---
   'React': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#61dafb',
-    bgColor: '#e0f7ff'
+    image: getUnsplashUrl('1633356122544-f134324ef6db'), // React code/Atom symbol
+    color: '#61DAFB',
+    bgColor: '#F0F9FF'
   },
   'Vue.js': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#4fc08d',
-    bgColor: '#e8f8f1'
+    image: getUnsplashUrl('1633356122544-f134324ef6db'), // Code screen
+    color: '#4FC08D',
+    bgColor: '#ECFDF5'
   },
   'Next.js': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
+    image: getUnsplashUrl('1618477247222-ac59e27621b4'), // Dark modern code
     color: '#000000',
-    bgColor: '#f0f0f0'
+    bgColor: '#F3F4F6'
   },
   'TypeScript': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3178c6',
-    bgColor: '#e8ecff'
+    image: getUnsplashUrl('1516116216624-53e697fedbea'), // Organized code
+    color: '#3178C6',
+    bgColor: '#EFF6FF'
   },
   'Tailwind CSS': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1507721999472-8ed4421c4af2'), // Palette/Design
+    color: '#06B6D4',
+    bgColor: '#ECFEFF'
   },
   'Node.js': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#68a063',
-    bgColor: '#e8f5e9'
-  },
-  'GraphQL': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#e10098',
-    bgColor: '#f5e6f0'
+    image: getUnsplashUrl('1627398242454-45a1465c2479'), // JavaScript code
+    color: '#68A063',
+    bgColor: '#F0FDF4'
   },
   'Full Stack': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
+    image: getUnsplashUrl('1498050108023-c5249f4df085'), // Laptop with code
+    color: '#6366F1',
+    bgColor: '#EEF2FF'
   },
 
-  // Mobile Development
+  // --- Mobile & Backend ---
   'React Native': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#61dafb',
-    bgColor: '#e0f7ff'
+    image: getUnsplashUrl('1512941937669-90a1b58e7e9c'), // Mobile phone usage
+    color: '#61DAFB',
+    bgColor: '#F0F9FF'
   },
   'Flutter': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#02569b',
-    bgColor: '#e3f2fd'
+    image: getUnsplashUrl('1617042375876-a3a499c90d11'), // App dashboard
+    color: '#02569B',
+    bgColor: '#EFF6FF'
   },
-  'iOS Development': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#000000',
-    bgColor: '#f5f5f5'
-  },
-  'Android Development': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3ddc84',
-    bgColor: '#e8f5e9'
-  },
-  'SwiftUI': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#fa7343',
-    bgColor: '#ffe8e0'
-  },
-  'Kotlin': {
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#7f52ff',
-    bgColor: '#f3e8ff'
-  },
-
-  // Backend & DevOps
   'Python': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3776ab',
-    bgColor: '#e3f2fd'
+    image: getUnsplashUrl('1526379095098-d400e777f72e'), // Python code/Snake abstract
+    color: '#3776AB',
+    bgColor: '#EFF6FF'
   },
   'Go': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#00add8',
-    bgColor: '#c0f0f5'
+    image: getUnsplashUrl('1555066931-4365d14bab8c'), // Fast/Motion blur (Go is fast)
+    color: '#00ADD8',
+    bgColor: '#ECFEFF'
   },
   'Rust': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ce3262',
-    bgColor: '#f5e6ea'
+    image: getUnsplashUrl('1518770660439-4636190af475'), // Industrial gears (Rust safe)
+    color: '#CE3262',
+    bgColor: '#FFF1F2'
   },
   'Docker': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#2496ed',
-    bgColor: '#d9eef8'
+    image: getUnsplashUrl('1605745341117-7c4187198409'), // Shipping containers
+    color: '#2496ED',
+    bgColor: '#F0F9FF'
   },
   'Kubernetes': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#316ce6',
-    bgColor: '#dce8f8'
-  },
-  'CI/CD': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f97316',
-    bgColor: '#ffedd5'
+    image: getUnsplashUrl('1667372393119-3d4c48d07fc9'), // Ship wheel/Helm vibe
+    color: '#316CE6',
+    bgColor: '#EFF6FF'
   },
   'AWS': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ff9900',
-    bgColor: '#fff3e0'
-  },
-  'Microservices': {
-    image: 'https://images.pexels.com/photos/3588365/pexels-photo-3588365.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
+    image: getUnsplashUrl('1451187580459-43490279c0fa'), // Cloud/Sky
+    color: '#FF9900',
+    bgColor: '#FFF7ED'
   },
 
-  // Data & AI
-  'Data Science': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3b82f6',
-    bgColor: '#dbeafe'
-  },
-  'PyTorch': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ee4c2c',
-    bgColor: '#ffe4e1'
-  },
-  'TensorFlow': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ff6f00',
-    bgColor: '#fff3e0'
-  },
-  'Data Visualization': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#10b981',
-    bgColor: '#d1fae5'
-  },
-  'SQL': {
-    image: 'https://images.pexels.com/photos/3808517/pexels-photo-3808517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#00758f',
-    bgColor: '#d9eef8'
-  },
-
-  // Design & Creative
+  // --- Design & Creative ---
   'UI/UX Design': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#ec4899',
-    bgColor: '#fce7f3'
-  },
-  'Figma': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#a259ff',
-    bgColor: '#f3e8ff'
+    image: getUnsplashUrl('1586717791821-3f44a5638d0f'), // Wireframes on paper
+    color: '#EC4899',
+    bgColor: '#FDF2F8'
   },
   '3D Modeling': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
-  },
-  'Animation': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f59e0b',
-    bgColor: '#fef3c7'
-  },
-  'Creative Coding': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#8b5cf6',
-    bgColor: '#f3e8ff'
-  },
-  'Web Design': {
-    image: 'https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#06b6d4',
-    bgColor: '#cffafe'
+    image: getUnsplashUrl('1617791160505-6f00504e35d9'), // 3D abstract render
+    color: '#6366F1',
+    bgColor: '#EEF2FF'
   },
 
-  // Other Tech
-  'Game Development': {
-    image: 'https://images.pexels.com/photos/3532521/pexels-photo-3532521.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#10b981',
-    bgColor: '#d1fae5'
-  },
-  'IoT': {
-    image: 'https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6b8cff',
-    bgColor: '#e8ecff'
-  },
+  // --- Other Tech ---
   'Blockchain Development': {
-    image: 'https://images.pexels.com/photos/3532521/pexels-photo-3532521.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f7931a',
-    bgColor: '#fff3e0'
-  },
-  'Open Source': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#3b82f6',
-    bgColor: '#dbeafe'
-  },
-  'Linux': {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#000000',
-    bgColor: '#f0f0f0'
+    image: getUnsplashUrl('1639322537228-f710d846310a'), // Blockchain blocks abstract
+    color: '#F7931A',
+    bgColor: '#FFF7ED'
   },
   'Cybersecurity': {
-    image: 'https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#f43f5e',
-    bgColor: '#ffe4e6'
+    image: getUnsplashUrl('1563986768609-322da13575f3'), // Lock/Digital Security
+    color: '#F43F5E',
+    bgColor: '#FFF1F2'
   },
+  'IoT': {
+    image: getUnsplashUrl('1558346490-51899914d3bd'), // Smart home/Chips
+    color: '#6B8CFF',
+    bgColor: '#EFF6FF'
+  }
 };
 
-// Get tag image, color, and background
+// --- Helper Functions ---
+
+// Fallback image (Abstract architectural)
+const DEFAULT_IMAGE = {
+  image: getUnsplashUrl('1504384308090-c54beed1f92b'),
+  color: '#6366F1',
+  bgColor: '#EEF2FF'
+};
+
 export function getTagImage(tag) {
-  return tagImageMap[tag] || {
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-    color: '#6366f1',
-    bgColor: '#e0e7ff'
-  };
+  // Try exact match first
+  if (tagImageMap[tag]) return tagImageMap[tag];
+  
+  // Try case-insensitive match
+  const key = Object.keys(tagImageMap).find(k => k.toLowerCase() === tag?.toLowerCase());
+  if (key) return tagImageMap[key];
+
+  return DEFAULT_IMAGE;
 }
 
-// Get image/color from first tag in list
 export function getFirstTagImage(tags) {
-  if (!tags || tags.length === 0) {
-    return {
-      image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=500&h=300',
-      color: '#6366f1',
-      bgColor: '#e0e7ff'
-    };
-  }
+  if (!tags || tags.length === 0) return DEFAULT_IMAGE;
   return getTagImage(tags[0]);
 }

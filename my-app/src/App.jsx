@@ -11,12 +11,9 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
-import Discover from "./pages/Discover";
-import Feed from "./pages/Feed";
 import AIDigest from "./pages/AIDigest";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
-import AIAssistant from "./pages/AIAssistant";
 import PaperDetail from "./pages/PaperDetail";
 import HobbyistMode from "./pages/HobbyistMode";
 import ArticleDetail from "./pages/ArticleDetail";
@@ -41,19 +38,6 @@ const App = () => {
             <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
               <Navbar theme="light" />
               <Home />
-              <Footer theme="light" />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/discover"
-        element={
-          <ProtectedRoute>
-            <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
-              <Navbar theme="light" />
-              <Discover />
               <Footer theme="light" />
             </div>
           </ProtectedRoute>
@@ -107,33 +91,6 @@ const App = () => {
             <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
               <Navbar theme="light" />
               <PaperDetail />
-              <Footer theme="light" />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* === Protected Dark Theme Pages === */}
-      <Route
-        path="/feed"
-        element={
-          <ProtectedRoute>
-            <div className="bg-[#0E0D0B] text-[#F5EFE6] min-h-screen font-sans">
-              <Navbar theme="light" />
-              <Feed />
-              <Footer theme="light" />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/aiassistant"
-        element={
-          <ProtectedRoute>
-            <div className="bg-[#0E0D0B] text-[#F5EFE6] min-h-screen font-sans">
-              <Navbar theme="light" />
-              <AIAssistant />
               <Footer theme="light" />
             </div>
           </ProtectedRoute>

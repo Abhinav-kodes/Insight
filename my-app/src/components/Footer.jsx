@@ -26,12 +26,6 @@ const Footer = ({ theme = "light" }) => {
           <a href="/home" className="hover:underline hover:text-[#5C4633]">
             Home
           </a>
-          <a href="/discover" className="hover:underline hover:text-[#5C4633]">
-            Discover
-          </a>
-          <a href="/feed" className="hover:underline hover:text-[#5C4633]">
-            Feed
-          </a>
           <a href="/aidigest" className="hover:underline hover:text-[#5C4633]">
             AI Digest
           </a>

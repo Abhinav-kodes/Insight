@@ -1,417 +1,240 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronRight, 
+  CheckCircle2, 
+  ArrowRight, 
+  ArrowLeft,
+  Loader2
+} from "lucide-react";
 
+// Import the data structure 
+import { CONTENT_MODES, INTERESTS_DATA } from "../constants/onboardingData";
+
+// --- Sub-Component: Mode Selection Card ---
+const ModeCard = ({ mode, isSelected, onClick }) => {
+  const Icon = mode.icon;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`relative w-full p-6 rounded-xl border-2 text-left transition-all duration-300 group
+        ${isSelected 
+          ? "border-[#8B5E3C] bg-[#F3E5D8] shadow-md scale-[1.01]" 
+          : "border-[#C6B29A]/50 bg-white hover:border-[#8B5E3C] hover:shadow-sm"
+        }`}
+    >
+      <div className="flex items-start gap-4">
+        <div className={`p-3 rounded-lg ${isSelected ? "bg-[#8B5E3C] text-white" : "bg-[#F5EFE6] text-[#5C4633] group-hover:bg-[#8B5E3C] group-hover:text-white transition-colors"}`}>
+          <Icon size={24} />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-lg text-[#3A2E22] mb-1">{mode.title}</h3>
+          <p className="text-sm text-[#5C4633]/80 leading-relaxed">{mode.description}</p>
+        </div>
+        <div className="mt-1">
+          {isSelected ? (
+            <CheckCircle2 className="text-[#8B5E3C] w-6 h-6" />
+          ) : (
+            <div className="w-6 h-6 rounded-full border-2 border-[#C6B29A] group-hover:border-[#8B5E3C]" />
+          )}
+        </div>
+      </div>
+    </button>
+  );
+};
+
+// --- Sub-Component: Interest Accordion ---
+const InterestSection = ({ title, interests, selectedInterests, onToggle, isExpanded, onExpand }) => {
+  const selectedCount = interests.filter(i => selectedInterests.includes(i)).length;
+
+  return (
+    <div className={`border rounded-lg overflow-hidden transition-colors ${isExpanded ? 'border-[#8B5E3C] bg-white' : 'border-[#C6B29A] bg-white'}`}>
+      <button
+        onClick={onExpand}
+        className="w-full p-4 flex items-center justify-between bg-[#F9F5F1] hover:bg-[#F3E5D8] transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-[#3A2E22]">{title}</span>
+          {selectedCount > 0 && (
+            <span className="bg-[#8B5E3C] text-white text-xs px-2 py-0.5 rounded-full">
+              {selectedCount}
+            </span>
+          )}
+        </div>
+        {isExpanded ? <ChevronDown className="w-5 h-5 text-[#5C4633]" /> : <ChevronRight className="w-5 h-5 text-[#5C4633]" />}
+      </button>
+
+      {isExpanded && (
+        <div className="p-4 flex flex-wrap gap-2 animate-in slide-in-from-top-2 duration-200">
+          {interests.map((interest) => {
+            const isActive = selectedInterests.includes(interest);
+            return (
+              <button
+                key={interest}
+                onClick={() => onToggle(interest)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 border
+                  ${isActive 
+                    ? "bg-[#8B5E3C] text-white border-[#8B5E3C] shadow-sm" 
+                    : "bg-white text-[#5C4633] border-[#E7D0C5] hover:border-[#8B5E3C] hover:text-[#3A2E22]"
+                  }`}
+              >
+                {interest}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Main Controller Component ---
 const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [contentMode, setContentMode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState([]);
+  const [expandedCategory, setExpandedCategory] = useState(null);
 
-  // Check if user already completed onboarding
   useEffect(() => {
-    async function checkOnboardingStatus() {
+    const checkStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.onboarding_completed) {
-          navigate('/home');
-          return;
-        }
+        const { data } = await supabase.from('users').select('onboarding_completed').eq('id', user.id).single();
+        if (data?.onboarding_completed) navigate('/home');
       }
-      
-      setCheckingStatus(false);
-    }
-
-    checkOnboardingStatus();
+    };
+    checkStatus();
   }, [navigate]);
 
-  // Interest categories tailored by mode
-  const interestsByMode = {
-    researcher: {
-      "Computer Science": [
-        "Machine Learning",
-        "Deep Learning",
-        "Computer Vision",
-        "Natural Language Processing",
-        "Reinforcement Learning",
-        "Algorithms & Data Structures",
-        "Distributed Systems",
-        "Quantum Computing"
-      ],
-      "Physics & Mathematics": [
-        "Quantum Physics",
-        "Theoretical Physics",
-        "Applied Mathematics",
-        "Statistical Mechanics",
-        "Topology",
-        "Number Theory"
-      ],
-      "Biology & Medicine": [
-        "Genomics",
-        "Neuroscience",
-        "Bioinformatics",
-        "Drug Discovery",
-        "Synthetic Biology",
-        "Immunology"
-      ],
-      "Engineering": [
-        "Robotics",
-        "Materials Science",
-        "Nanotechnology",
-        "Aerospace Engineering",
-        "Chemical Engineering",
-        "Electrical Engineering"
-      ],
-      "Social Sciences": [
-        "Economics",
-        "Psychology Research",
-        "Sociology",
-        "Political Science",
-        "Behavioral Science"
-      ]
-    },
-    hobbyist: {
-      "Web Development": [
-        "React",
-        "Vue.js",
-        "Next.js",
-        "TypeScript",
-        "Tailwind CSS",
-        "Node.js",
-        "GraphQL",
-        "Full Stack"
-      ],
-      "Mobile Development": [
-        "React Native",
-        "Flutter",
-        "iOS Development",
-        "Android Development",
-        "SwiftUI",
-        "Kotlin"
-      ],
-      "Backend & DevOps": [
-        "Python",
-        "Go",
-        "Rust",
-        "Docker",
-        "Kubernetes",
-        "CI/CD",
-        "AWS",
-        "Microservices"
-      ],
-      "Data & AI": [
-        "Data Science",
-        "Machine Learning",
-        "PyTorch",
-        "TensorFlow",
-        "Data Visualization",
-        "SQL"
-      ],
-      "Design & Creative": [
-        "UI/UX Design",
-        "Figma",
-        "3D Modeling",
-        "Animation",
-        "Creative Coding",
-        "Web Design"
-      ],
-      "Other Tech": [
-        "Game Development",
-        "IoT",
-        "Blockchain Development",
-        "Open Source",
-        "Linux",
-        "Cybersecurity"
-      ]
-    },
-    trend_watcher: {
-      "AI & Tech": [
-        "Artificial Intelligence",
-        "ChatGPT & LLMs",
-        "AI Ethics",
-        "AI Startups",
-        "Tech Acquisitions",
-        "Big Tech News"
-      ],
-      "Crypto & Web3": [
-        "Bitcoin",
-        "Ethereum",
-        "DeFi",
-        "NFTs",
-        "Blockchain",
-        "Crypto Regulations"
-      ],
-      "Startups & Business": [
-        "Startup Funding",
-        "Y Combinator",
-        "Tech IPOs",
-        "Unicorn Startups",
-        "Venture Capital",
-        "Tech Layoffs"
-      ],
-      "Industry Trends": [
-        "Cloud Computing",
-        "5G Technology",
-        "Electric Vehicles",
-        "Space Tech",
-        "Quantum Computing",
-        "Metaverse"
-      ],
-      "Policy & Society": [
-        "Tech Regulations",
-        "Privacy Laws",
-        "Antitrust",
-        "Climate Tech",
-        "Digital Rights",
-        "AI Governance"
-      ],
-      "Consumer Tech": [
-        "Smartphones",
-        "Wearables",
-        "Gaming Consoles",
-        "Smart Home",
-        "VR/AR",
-        "Tech Reviews"
-      ]
-    }
-  };
-
-  const toggleCategory = (category) => {
-    if (expandedCategories.includes(category)) {
-      setExpandedCategories(expandedCategories.filter(c => c !== category));
-    } else {
-      setExpandedCategories([...expandedCategories, category]);
-    }
-  };
-
   const handleInterestToggle = (interest) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter(i => i !== interest));
-    } else {
-      setSelectedInterests([...selectedInterests, interest]);
-    }
+    setSelectedInterests(prev => 
+      prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]
+    );
   };
 
   const handleComplete = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // Update User Mode
+      await supabase.from('users').update({ 
+        content_mode: contentMode, 
+        onboarding_completed: true 
+      }).eq('id', user.id);
 
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          content_mode: contentMode,
-          onboarding_completed: true
-        })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      const interestsToInsert = selectedInterests.map(interest => ({
-        user_id: user.id,
-        interest_name: interest
-      }));
-
-      const { error: interestsError } = await supabase
-        .from('user_interests')
-        .insert(interestsToInsert);
-
-      if (interestsError) throw interestsError;
+      // Insert Interests
+      const interestPayload = selectedInterests.map(name => ({ user_id: user.id, interest_name: name }));
+      await supabase.from('user_interests').insert(interestPayload);
 
       navigate('/home');
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-      alert('Error saving preferences. Please try again.');
+      // FIXED: Removed stray </button> tag here
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (checkingStatus) {
-    return (
-      <div className="min-h-screen bg-[#F5EFE6] flex items-center justify-center">
-        <div className="text-xl text-[#352414]">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#F5EFE6] flex items-center justify-center p-6">
-      <div className="max-w-3xl w-full bg-white rounded-2xl shadow-lg p-8">
-        {/* Step 1: Select Content Mode */}
+    <div className="min-h-screen bg-[#F5EFE6] flex items-center justify-center p-4 md:p-6 font-sans">
+      <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-8 border border-[#E7D0C5]">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#3A2E22] text-[#F5EFE6] font-bold text-sm">
+              {step}
+            </span>
+            <span className="text-[#C6B29A] text-sm uppercase tracking-widest font-semibold">
+              Step {step} of 2
+            </span>
+          </div>
+          <h2 className="text-3xl font-bold text-[#3A2E22]">
+            {step === 1 ? "Choose your perspective" : "Curate your feed"}
+          </h2>
+          <p className="text-[#5C4633] mt-2">
+            {step === 1 
+              ? "How do you want to consume information on Insights?" 
+              : "Select at least 3 topics to personalize your experience."}
+          </p>
+        </div>
+
+        {/* Step 1: Mode Selection */}
         {step === 1 && (
-          <div>
-            <h2 className="text-3xl font-bold text-[#3A2E22] mb-4">
-              Choose your content mode
-            </h2>
-            <p className="text-[#5C4633] mb-6">
-              This determines what type of content you'll see
-            </p>
-
-            <div className="space-y-4 mb-6">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              {CONTENT_MODES.map((mode) => (
+                <ModeCard 
+                  key={mode.id}
+                  mode={mode}
+                  isSelected={contentMode === mode.id}
+                  onClick={() => setContentMode(mode.id)}
+                />
+              ))}
+            </div>
+            
+            <div className="flex justify-end pt-4">
               <button
-                onClick={() => setContentMode("researcher")}
-                className={`w-full p-5 rounded-lg border-2 text-left transition ${
-                  contentMode === "researcher"
-                    ? "border-[#8B5E3C] bg-[#F3E5D8]"
-                    : "border-[#C6B29A] hover:border-[#8B5E3C]"
-                }`}
+                onClick={() => setStep(2)}
+                disabled={!contentMode}
+                className="flex items-center gap-2 px-8 py-3 bg-[#3A2E22] text-[#F3E5D8] rounded-lg font-semibold 
+                         disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#5C4633] transition-all"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl">📚</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-[#3A2E22]">
-                      Researcher Mode
-                    </h3>
-                    <p className="text-sm text-[#5C4633]">
-                      Research papers, ArXiv, academic publications, scientific journals
-                    </p>
-                  </div>
-                  {contentMode === "researcher" && (
-                    <span className="text-[#8B5E3C]">✓</span>
-                  )}
-                </div>
-              </button>
-
-              <button
-                onClick={() => setContentMode("hobbyist")}
-                className={`w-full p-5 rounded-lg border-2 text-left transition ${
-                  contentMode === "hobbyist"
-                    ? "border-[#8B5E3C] bg-[#F3E5D8]"
-                    : "border-[#C6B29A] hover:border-[#8B5E3C]"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl">✍️</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-[#3A2E22]">
-                      Hobbyist Mode
-                    </h3>
-                    <p className="text-sm text-[#5C4633]">
-                      Blogs, tutorials, Medium articles, dev.to, hands-on guides
-                    </p>
-                  </div>
-                  {contentMode === "hobbyist" && (
-                    <span className="text-[#8B5E3C]">✓</span>
-                  )}
-                </div>
-              </button>
-
-              <button
-                onClick={() => setContentMode("trend_watcher")}
-                className={`w-full p-5 rounded-lg border-2 text-left transition ${
-                  contentMode === "trend_watcher"
-                    ? "border-[#8B5E3C] bg-[#F3E5D8]"
-                    : "border-[#C6B29A] hover:border-[#8B5E3C]"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl">📰</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-[#3A2E22]">
-                      Trend Watcher Mode
-                    </h3>
-                    <p className="text-sm text-[#5C4633]">
-                      Tech news, TechCrunch, The Verge, Wired, industry trends
-                    </p>
-                  </div>
-                  {contentMode === "trend_watcher" && (
-                    <span className="text-[#8B5E3C]">✓</span>
-                  )}
-                </div>
+                Continue <ArrowRight size={18} />
               </button>
             </div>
-
-            <button
-              onClick={() => setStep(2)}
-              disabled={!contentMode}
-              className="w-full py-3 bg-[#8B5E3C] text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6E472F]"
-            >
-              Continue
-            </button>
           </div>
         )}
 
-        {/* Step 2: Select Interests with Categories */}
+        {/* Step 2: Interest Selection */}
         {step === 2 && (
-          <div>
-            <h2 className="text-3xl font-bold text-[#3A2E22] mb-4">
-              What are you interested in?
-            </h2>
-            <p className="text-[#5C4633] mb-6">
-              Select at least 3 topics to personalize your feed
-            </p>
-
-            <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
-              {Object.entries(interestsByMode[contentMode] || {}).map(([category, interests]) => (
-                <div key={category} className="border border-[#C6B29A] rounded-lg overflow-hidden">
-                  {/* Category Header */}
-                  <button
-                    onClick={() => toggleCategory(category)}
-                    className="w-full p-4 flex items-center justify-between bg-[#F3E5D8] hover:bg-[#E7D0C5] transition"
-                  >
-                    <span className="font-semibold text-[#3A2E22]">{category}</span>
-                    {expandedCategories.includes(category) ? (
-                      <ChevronDown className="w-5 h-5 text-[#5C4633]" />
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-[#5C4633]" />
-                    )}
-                  </button>
-
-                  {/* Category Content */}
-                  {expandedCategories.includes(category) && (
-                    <div className="p-4 flex flex-wrap gap-2 bg-white">
-                      {interests.map((interest) => (
-                        <button
-                          key={interest}
-                          onClick={() => handleInterestToggle(interest)}
-                          className={`px-3 py-2 rounded-full border-2 transition text-sm ${
-                            selectedInterests.includes(interest)
-                              ? "bg-[#8B5E3C] text-white border-[#8B5E3C]"
-                              : "bg-white text-[#3A2E22] border-[#C6B29A] hover:border-[#8B5E3C]"
-                          }`}
-                        >
-                          {interest}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+          <div className="space-y-6">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {Object.entries(INTERESTS_DATA[contentMode] || {}).map(([category, list]) => (
+                <InterestSection 
+                  key={category}
+                  title={category}
+                  interests={list}
+                  selectedInterests={selectedInterests}
+                  onToggle={handleInterestToggle}
+                  isExpanded={expandedCategory === category}
+                  onExpand={() => setExpandedCategory(expandedCategory === category ? null : category)}
+                />
               ))}
             </div>
 
-            <div className="flex gap-3">
+            {/* Footer / Actions */}
+            <div className="flex items-center justify-between pt-6 border-t border-[#E7D0C5]">
               <button
-                onClick={() => {
-                  setStep(1);
-                  setSelectedInterests([]);
-                  setExpandedCategories([]);
-                }}
-                className="flex-1 py-3 border-2 border-[#C6B29A] text-[#3A2E22] rounded-lg font-semibold hover:bg-[#F3E5D8]"
+                onClick={() => setStep(1)}
+                className="flex items-center gap-2 text-[#5C4633] hover:text-[#3A2E22] font-medium px-4 py-2"
               >
-                Back
+                <ArrowLeft size={18} /> Back
               </button>
-              <button
-                onClick={handleComplete}
-                disabled={selectedInterests.length < 3 || loading}
-                className="flex-1 py-3 bg-[#8B5E3C] text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6E472F]"
-              >
-                {loading ? "Saving..." : `Complete (${selectedInterests.length}/3 minimum)`}
-              </button>
+
+              <div className="flex items-center gap-4">
+                <span className={`text-sm font-medium ${selectedInterests.length < 3 ? "text-red-500" : "text-green-600"}`}>
+                  {selectedInterests.length} selected
+                </span>
+                <button
+                  onClick={handleComplete}
+                  disabled={selectedInterests.length < 3 || loading}
+                  className="flex items-center gap-2 px-8 py-3 bg-[#8B5E3C] text-white rounded-lg font-semibold 
+                           disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#6E472F] shadow-md transition-all"
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : "Complete Setup"}
+                </button>
+              </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

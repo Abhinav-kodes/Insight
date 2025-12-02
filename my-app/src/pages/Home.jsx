@@ -1,279 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import React from 'react';
+import { useHomeContent } from '../hooks/useHomeContent'; // Import the hook above
 import PaperCard from '../components/PaperCard';
+import { Sparkles, Layers, BookOpen } from 'lucide-react';
+
+const HomeHeader = ({ userMode, interests }) => (
+  <div className="relative bg-[#735c45] text-[#F3E5D8] pt-12 pb-24 px-6 md:px-12 overflow-hidden rounded-b-[3rem]">
+    {/* Abstract Background Shapes */}
+    <div className="absolute top-0 right-0 w-96 h-96 bg-[#C6B29A] opacity-10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3"></div>
+    <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#8B5E3C] opacity-10 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3"></div>
+
+    <div className="relative max-w-7xl mx-auto z-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2 text-[#C6B29A] font-medium tracking-wider text-sm uppercase">
+            <Sparkles size={16} />
+            <span>{userMode === 'hobbyist' ? 'Creative Feed' : 'Research Feed'}</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-serif font-bold leading-tight">
+            Your Knowledge <br />
+            <span className="text-[#C6B29A] italic">Curated.</span>
+          </h1>
+        </div>
+        
+        {/* Interests Pills */}
+        <div className="max-w-md">
+          <p className="text-sm text-[#C6B29A]/80 mb-3">Based on your interests:</p>
+          <div className="flex flex-wrap gap-2">
+            {interests.slice(0, 5).map(tag => (
+              <span key={tag} className="px-3 py-1 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full text-xs text-[#F3E5D8]">
+                {tag}
+              </span>
+            ))}
+            {interests.length > 5 && (
+              <span className="px-3 py-1 bg-white/5 rounded-full text-xs text-[#C6B29A]">+ {interests.length - 5} more</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const Home = () => {
-  const navigate = useNavigate();
-  const [userMode, setUserMode] = useState('research');
-  const [content, setContent] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
-  const [userInterests, setUserInterests] = useState([]);
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    initializeUser();
-  }, []);
-
-  useEffect(() => {
-    if (initialized && userInterests.length > 0) {
-      console.log('Fetching with interests:', userInterests);
-      fetchContent();
-    }
-  }, [initialized, userInterests]);
-
-  const initializeUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      setUserId(user.id);
-
-      const { data: userData } = await supabase
-        .from('users')
-        .select('content_mode')
-        .eq('id', user.id)
-        .single();
-
-      if (userData?.content_mode) {
-        const appMode = userData.content_mode === 'hobbyist' ? 'hobbyist' : 'research';
-        setUserMode(appMode);
-      }
-
-      const { data: interests } = await supabase
-        .from('user_interests')
-        .select('interest_name')
-        .eq('user_id', user.id);
-
-      if (interests && interests.length > 0) {
-        const interestNames = interests.map(i => i.interest_name);
-        console.log('📌 User Interests:', interestNames);
-        setUserInterests(interestNames);
-      }
-
-      setInitialized(true);
-      setLoading(false);
-    } catch (error) {
-      console.error('❌ Error initializing user:', error);
-      setInitialized(true);
-      setLoading(false);
-    }
-  };
-
-  const fetchContent = async () => {
-    try {
-      setLoading(true);
-
-      const contentType = userMode === 'hobbyist' ? 'hobby_article' : 'research_paper';
-
-      let query = supabase
-        .from('content')
-        .select('*')
-        .eq('content_type', contentType)
-        .order(userMode === 'hobbyist' ? 'scraped_at' : 'created_at', { ascending: false });
-
-      const { data, error } = await query.limit(300); // Increased from 200
-
-      if (error) throw error;
-
-      const matchStats = {};
-      userInterests.forEach(interest => {
-        matchStats[interest] = [];
-      });
-
-      // Filter: Check if ANY tag matches ANY interest
-      const allMatches = data?.filter(article => {
-        if (!article.tags || !Array.isArray(article.tags) || article.tags.length === 0) {
-          return false;
-        }
-
-        let hasMatch = false;
-        const matchedInterests = [];
-
-        article.tags.forEach(tag => {
-          const normalizedTag = tag.toLowerCase().trim();
-          
-          userInterests.forEach(interest => {
-            const normalizedInterest = interest.toLowerCase().trim();
-            
-            if (normalizedTag === normalizedInterest || 
-                normalizedTag.includes(normalizedInterest) || 
-                normalizedInterest.includes(normalizedTag)) {
-              hasMatch = true;
-              if (!matchedInterests.includes(interest)) {
-                matchedInterests.push(interest);
-                matchStats[interest].push({
-                  id: article.id,
-                  title: article.title
-                });
-              }
-            }
-          });
-        });
-
-        if (hasMatch) {
-          article.matchedInterests = matchedInterests;
-        }
-
-        return hasMatch;
-      }) || [];
-
-      // Balance results: Show ~5-7 papers per interest category
-      const balancedContent = [];
-      const papersPerInterest = Math.ceil(30 / userInterests.length); // 30 total papers
-
-      // Sort by matched interests to balance
-      const sorted = allMatches.sort((a, b) => {
-        // Prioritize papers that match fewer interests (more unique)
-        return a.matchedInterests.length - b.matchedInterests.length;
-      });
-
-      // Track which interests are represented
-      const interestCounts = {};
-      userInterests.forEach(i => interestCounts[i] = 0);
-
-      sorted.forEach(article => {
-        // Check if we can add more from any of this article's interests
-        const canAdd = article.matchedInterests.some(
-          interest => interestCounts[interest] < papersPerInterest
-        );
-
-        if (canAdd && balancedContent.length < 30) {
-          balancedContent.push(article);
-          article.matchedInterests.forEach(interest => {
-            interestCounts[interest]++;
-          });
-        }
-      });
-
-      console.log(`\n📊 RESULTS:`);
-      console.log(`Total filtered: ${allMatches.length}/${data?.length} articles`);
-      console.log(`Showing: ${balancedContent.length} balanced articles`);
-      console.log(`\n📊 Breakdown by interest:`);
-      Object.entries(matchStats).forEach(([interest, papers]) => {
-        console.log(`  ${interest}: ${papers.length} papers (showing ~${interestCounts[interest]})`);
-      });
-
-      setContent(balancedContent);
-    } catch (error) {
-      console.error('❌ Error fetching content:', error);
-      setContent([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use the custom hook to get data
+  const { content, loading, userMode, userInterests } = useHomeContent();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F3E5D8]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B6F47] mx-auto mb-4"></div>
-          <p className="text-[#4a3c28]">Loading your feed...</p>
-        </div>
+      <div className="min-h-screen bg-[#F9F5F1] flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-[#C6B29A] border-t-[#3A2E22] rounded-full animate-spin"></div>
+        <p className="text-[#5C4633] font-medium animate-pulse">Curating your insights...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F3E5D8]">
-      <div className="bg-gradient-to-r from-[#8B6F47] to-[#6B5335] text-white py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">
-            {userMode === 'hobbyist' ? '📰 Your Feed' : 'Your Feed'}
-          </h1>
-          <p className="text-orange-100">
-            {userMode === 'hobbyist' 
-              ? `For: ${userInterests.join(', ')}` 
-              : `Exploring: ${userInterests.join(', ')}`}
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F9F5F1] font-sans">
+      
+      {/* 1. Creative Header */}
+      <HomeHeader userMode={userMode} interests={userInterests} />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* 2. Main Content Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 relative z-20">
+        
         {content.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
             {content.map((item) => (
-              userMode === 'hobbyist' ? (
-                <ArticleCard 
-                  key={item.id} 
-                  article={item} 
-                  navigate={navigate} 
-                />
-              ) : (
-                <PaperCard
-                  key={item.id}
-                  id={item.id}
-                  title={item.title}
-                  description={item.description}
-                  text_summary={item.text_summary}
-                  authors_list={item.authors_list}
-                  publication_date={item.publication_date}
-                  tags={item.tags}
-                  url={item.url}
-                  pdf_url={item.pdf_url}
-                  citations_count={item.citations_count}
-                />
-              )
+              <PaperCard
+                key={item.id}
+                {...item} // Pass all properties
+              />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-[#4a3c28b3] text-lg mb-2">
-              No content found matching your interests.
-            </p>
-            <p className="text-[#4a3c28b3] text-sm">
-              Interests: {userInterests.join(', ')}
+          <div className="bg-white rounded-3xl p-12 text-center shadow-lg border border-[#E7D0C5]">
+            <div className="w-16 h-16 bg-[#F3E5D8] rounded-full flex items-center justify-center mx-auto mb-4 text-[#8B5E3C]">
+              <Layers size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-[#3A2E22] mb-2">No matches found</h3>
+            <p className="text-[#5C4633]">
+              We couldn't find fresh content for your specific tags today. <br/>
+              Try adding broader interests in your settings.
             </p>
           </div>
         )}
       </div>
     </div>
-  );
-};
-
-const ArticleCard = ({ article, navigate }) => {
-  const handleClick = () => {
-    sessionStorage.setItem(`article-${article.id}`, JSON.stringify(article));
-    navigate(`/article/${article.id}`);
-  };
-
-  return (
-    <article
-      onClick={handleClick}
-      className="bg-white rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden group"
-    >
-      <div className="p-4">
-        <h3 className="text-lg font-bold text-[#3b2f20] mb-2 line-clamp-2 group-hover:text-[#d18b2a]">
-          {article.title}
-        </h3>
-
-        <p className="text-sm text-[#4a3c28b3] mb-3 line-clamp-2">
-          {article.description}
-        </p>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[#4a3c28b3] mb-3 pb-3 border-b border-[#e5d3b3]">
-          <span className="font-medium">{article.authors_list?.[0]}</span>
-          <span>•</span>
-          <span>{new Date(article.scraped_at || article.created_at).toLocaleDateString()}</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {article.tags?.slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="text-xs bg-[#f0e6d8] px-2 py-1 rounded-full text-[#765a3f]"
-            >
-              #{tag.toLowerCase().replace(/\s+/g, '')}
-            </span>
-          ))}
-        </div>
-      </div>
-    </article>
   );
 };
 
