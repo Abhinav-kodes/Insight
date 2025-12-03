@@ -8,10 +8,12 @@ import { authMiddleware, AuthRequest } from './middleware/auth';
 import { supabase } from './services/supabase';
 import { PaperFetchJob } from './jobs/fetchPapers';
 import { ContentParserJob } from './jobs/parseContent';
+import { DevToFetchJob } from './jobs/fetchDevTo';
+
+// Routes
 import pdfRouter from './routes/pdf';
 import aiRouter from './routes/ai';
-import mediumRouter from './routes/medium';
-import { MediumFetchJob } from './jobs/fetchMedium';
+import devToRouter from './routes/devTo';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,9 +38,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// Initialize Jobs
 const paperFetchJob = new PaperFetchJob();
 const contentParserJob = new ContentParserJob();
-const mediumFetchJob = new MediumFetchJob();
+const devToFetchJob = new DevToFetchJob();
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
@@ -54,6 +57,8 @@ app.get('/health', (req: Request, res: Response) => {
 app.post('/api/protected', authMiddleware, (req: AuthRequest, res: Response) => {
   res.json({ message: 'Success', user: req.user });
 });
+
+// --- PAPER JOBS ---
 
 // Fetch papers from ArXiv
 app.post('/api/fetch-papers', async (req: Request, res: Response) => {
@@ -143,23 +148,29 @@ app.get('/api/parse-details', async (req: Request, res: Response) => {
   }
 });
 
-// Fetch Medium articles
-app.post('/api/fetch-medium', async (req: Request, res: Response) => {
+// --- DEV.TO JOBS ---
+
+// Trigger Manual Dev.to Fetch
+app.post('/api/fetch-devto', async (req: Request, res: Response) => {
   try {
-    res.json({ message: 'Medium article fetch started in background' });
-    console.log('🚀 Medium fetch triggered!');
+    // Default to 24 hours lookback if not specified
+    const hours = req.body?.hours ? parseInt(req.body.hours) : 24;
     
-    mediumFetchJob.fetchAndSaveMediumArticles().catch(console.error);
+    res.json({ message: `Dev.to article fetch started (last ${hours}h) in background` });
+    console.log('🚀 Dev.to fetch triggered!');
+    
+    devToFetchJob.fetchAndSaveArticles(hours).catch(console.error);
   } catch (error) {
-    console.error('❌ Error triggering medium fetch:', error);
+    console.error('❌ Error triggering Dev.to fetch:', error);
     res.status(500).json({ error: 'Failed to start fetch' });
   }
 });
 
-// API Routes
+// --- API ROUTES ---
 app.use('/api/pdf', pdfRouter);
 app.use('/api/ai', aiRouter);
-app.use('/api/medium', mediumRouter);
+// Changed from 'medium' to 'devto' for clarity
+app.use('/api/devto', devToRouter); 
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -182,6 +193,7 @@ app.listen(PORT, () => {
   console.log('\n' + '='.repeat(50));
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📚 ArXiv + PDF Parsing active`);
+  console.log(`👩‍💻 Dev.to Integration active`);
   console.log(`🤖 Gemini API: ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log(`📧 Resend Email: ${process.env.RESEND_API_KEY ? '✅ Configured' : '⚠️  Not configured'}`);
   console.log('='.repeat(50) + '\n');

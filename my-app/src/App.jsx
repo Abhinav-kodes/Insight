@@ -15,8 +15,6 @@ import AIDigest from "./pages/AIDigest";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import PaperDetail from "./pages/PaperDetail";
-import HobbyistMode from "./pages/HobbyistMode";
-import ArticleDetail from "./pages/ArticleDetail";
 
 const App = () => {
   return (
@@ -91,32 +89,6 @@ const App = () => {
             <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
               <Navbar theme="light" />
               <PaperDetail />
-              <Footer theme="light" />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/hobbyist"
-        element={
-          <ProtectedRoute>
-            <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
-              <Navbar theme="light" />
-              <HobbyistMode />
-              <Footer theme="light" />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/article/:id"
-        element={
-          <ProtectedRoute>
-            <div className="bg-[#F5EFE6] text-[#352414] min-h-screen font-sans">
-              <Navbar theme="light" />
-              <ArticleDetail />
               <Footer theme="light" />
             </div>
           </ProtectedRoute>
