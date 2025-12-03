@@ -6,132 +6,167 @@ import { supabase } from '../services/supabase';
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-interface SummarizeRequest {
-  fullText: string;
-  systemPrompt?: string;
-}
+// --- Helpers ---
+
+// Helper to log text length safely
+const logContentStats = (label: string, text: string | undefined) => {
+  if (!text) {
+    console.log(`❌ ${label}: EMPTY or UNDEFINED`);
+    return;
+  }
+  const len = text.length;
+  console.log(`📏 ${label} Length: ${len} characters`);
+  console.log(`   Start: "${text.substring(0, 50).replace(/\n/g, ' ')}..."`);
+  console.log(`   End:   "...${text.substring(len - 100).replace(/\n/g, ' ')}"`);
+};
+
+// Helper to get full text (Prioritize DB > Client Body)
+const getFullPaperText = async (paperId: string | undefined, bodyContent: string | undefined) => {
+  // 1. Try DB First if ID exists (Source of Truth)
+  if (paperId) {
+    console.log(`📥 Fetching full text for ID: ${paperId} from DB...`);
+    const { data, error } = await supabase
+      .from('content')
+      .select('full_text')
+      .eq('id', paperId)
+      .single();
+
+    if (!error && data?.full_text) {
+      console.log('✅ Successfully fetched text from DB');
+      return data.full_text;
+    }
+    console.warn('⚠️ DB fetch failed or empty, falling back to client content');
+  }
+  
+  // 2. Fallback to client content
+  return bodyContent || '';
+};
+
+// --- Routes ---
 
 // Summarize paper with Gemini
 router.post('/summarize', async (req, res) => {
   try {
-    const { fullText, systemPrompt } = req.body as SummarizeRequest;
+    const { fullText, paperId, systemPrompt } = req.body;
 
-    if (!fullText || fullText.trim().length === 0) {
-      return res.status(400).json({ error: 'Full text is required' });
+    console.log('\n--- SUMMARIZE REQUEST RECEIVED ---');
+    
+    // Fetch full text
+    const finalPaperContent = await getFullPaperText(paperId, fullText);
+    logContentStats('Final Content for Summary', finalPaperContent);
+
+    if (!finalPaperContent || finalPaperContent.trim().length === 0) {
+      return res.status(400).json({ error: 'Full text is required (could not fetch from DB or Body)' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      console.error('❌ GEMINI_API_KEY not found');
-      return res.status(500).json({ 
-        error: 'Gemini API key not configured'
-      });
-    }
-
-    console.log('✅ GEMINI_API_KEY found, initializing...');
+    if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured' });
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    
+    // Config Model with System Instructions (Stronger adherence)
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
+      systemInstruction: "You are an expert research paper analyzer. Your goal is to read the ENTIRE provided text and generate a comprehensive summary following the user's structure. Do not output markdown code blocks unless asked."
+    });
 
-    const defaultPrompt = `You are an expert research paper analyzer. Provide a clear, well-structured summary of the research paper below.
-
-Format the response EXACTLY as follows (use these exact section headers):
+    const structurePrompt = `Format the response EXACTLY as follows:
 
 ## Executive Summary
 [1-2 sentences capturing the main contribution]
 
 ## Research Question & Objectives
-[What problem does this paper solve? What are the main goals?]
+[What problem does this paper solve?]
 
 ## Methodology
-[Bullet points of key methods, frameworks, or approaches used]
-- Point 1
-- Point 2
-- Point 3
+[Key methods used]
 
 ## Key Findings & Results
-[Main results and achievements - bullet points]
-- Finding 1
-- Finding 2
-- Finding 3
+[Main results - bullet points]
 
 ## Implications & Significance
-[Why does this matter? What are the practical applications?]
+[Why does this matter?]
 
 ## Limitations & Future Work
-[Any acknowledged limitations or areas for further research]
+[Areas for further research]
 
-Keep language clear and accessible. Avoid overly technical jargon. Be concise but informative.`;
+${systemPrompt ? `Additional Instructions: ${systemPrompt}` : ''}
+    `;
 
-    const prompt = `${systemPrompt || defaultPrompt}
+    console.log('🤖 Calling Gemini 2.0 Flash for summarization...');
+    
+    // Send as PARTS (Array) to prevent truncation issues
+    const result = await model.generateContent([
+      { text: structurePrompt },
+      { text: "--- BEGIN PAPER CONTENT ---" },
+      { text: finalPaperContent },
+      { text: "--- END PAPER CONTENT ---" }
+    ]);
 
----
-
-PAPER CONTENT:
-${fullText.substring(0, 15000)}`;
-
-    console.log('🤖 Calling Gemini 2.0 Flash API for summarization...');
-
-    const result = await model.generateContent(prompt);
     const summary = result.response.text();
+    console.log('✅ Summary generated');
 
-    console.log('✅ Gemini summary generated successfully');
-
-    res.json({ 
-      summary,
-      model: 'gemini-2.0-flash',
-      tokens: result.response.usageMetadata
-    });
+    res.json({ summary, model: 'gemini-2.0-flash' });
 
   } catch (error) {
     console.error('❌ AI summarization error:', error);
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to generate summary',
-      type: error instanceof Error ? error.name : 'Unknown'
-    });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to generate summary' });
   }
 });
 
 // Answer questions about paper
 router.post('/ask', async (req, res) => {
   try {
-    const { question, paperContent, paperTitle, authors } = req.body;
+    const { question, paperContent, paperId, paperTitle, authors } = req.body;
 
-    if (!question || !paperContent) {
+    console.log('\n--- ASK REQUEST RECEIVED ---');
+    console.log(`❓ Question: ${question}`);
+
+    // Fetch full text
+    const finalPaperContent = await getFullPaperText(paperId, paperContent);
+    logContentStats('Final Content for Ask', finalPaperContent);
+
+    if (!question || !finalPaperContent) {
       return res.status(400).json({ error: 'Question and paper content required' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Gemini API key not configured' });
-    }
+    if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured' });
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    
+    // Config Model with System Instructions for Context Awareness
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
+      systemInstruction: `You are a helpful and rigorous research assistant.
+      
+      CRITICAL INSTRUCTION: You must read the ENTIRE text content provided, from the very first character to the very last character.
+      
+      Do not stop reading if you see blank lines, page numbers, or formatting artifacts.
+      The user will ask a question about the paper. Answer it based ONLY on the text provided.
+      `
+    });
 
-    const prompt = `You are an expert research assistant. Answer the following question about this research paper based on its content.
+    console.log('🤖 Sending prompt to Gemini...');
 
-Paper Title: ${paperTitle}
-Authors: ${authors}
+    // Send as PARTS (Array) - This is the key fix for the "Page 8" issue.
+    // It forces the model to treat the huge string as a distinct data block.
+    const result = await model.generateContent([
+      { text: `Metadata: Title: "${paperTitle || 'Unknown'}", Authors: "${authors || 'Unknown'}"` },
+      { text: "--- BEGIN FULL PAPER TEXT ---" },
+      { text: finalPaperContent }, // Sent as a separate part
+      { text: "--- END FULL PAPER TEXT ---" },
+      { text: `USER QUESTION: ${question}` }
+    ]);
 
-Question: ${question}
-
-Paper Content (first 10000 chars):
-${paperContent.substring(0, 10000)}
-
-Provide a clear, concise answer in 2-3 sentences. If the answer isn't in the paper, say so and ask them to check the full paper.`;
-
-    const result = await model.generateContent(prompt);
     const answer = result.response.text();
+    console.log('✅ Answer generated');
 
     res.json({ answer });
 
   } catch (error) {
     console.error('FAQ error:', error);
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to answer question'
-    });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to answer question' });
   }
 });
 

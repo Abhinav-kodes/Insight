@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
+// PDF Viewer Styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
 import { supabase } from '../lib/supabaseClient';
 import { 
   ArrowLeft, 
@@ -28,22 +31,26 @@ import {
 const PaperDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  // Data States
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('abstract');
+  
+  // User Interaction States
   const [upvoted, setUpvoted] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [copied, setCopied] = useState(false);
   
-  // AI Summary states
+  // AI Summary States
   const [aiSummary, setAiSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState('');
   const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState('');
-  const [copied, setCopied] = useState(false);
 
-  // FAQ Chatbot states
+  // FAQ Chatbot States
   const [faqMessages, setFaqMessages] = useState([
     {
       id: 1,
@@ -54,6 +61,7 @@ const PaperDetail = () => {
   const [faqInput, setFaqInput] = useState('');
   const [faqLoading, setFaqLoading] = useState(false);
 
+  // PDF Plugin Instance
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   useEffect(() => {
@@ -81,8 +89,8 @@ const PaperDetail = () => {
   };
 
   const generateAiSummary = async () => {
-    if (!paper?.full_text) {
-      setSummaryError('No paper text available to summarize');
+    if (!paper) {
+      setSummaryError('Paper data not available');
       return;
     }
 
@@ -97,7 +105,8 @@ const PaperDetail = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fullText: paper.full_text,
+          paperId: paper.id, // ✅ Send ID for server-side fetching
+          fullText: paper.full_text, // Keep for backward compatibility
           systemPrompt: systemPrompt || undefined,
         }),
       });
@@ -121,26 +130,29 @@ const PaperDetail = () => {
   const askFaq = async () => {
     if (!faqInput.trim()) return;
 
+    const currentQuestion = faqInput; // Capture text before clearing state
+
     try {
-      // Add user message
+      // 1. Add user message to UI immediately
       const userMessage = {
         id: Date.now(),
         type: 'user',
-        text: faqInput
+        text: currentQuestion
       };
       setFaqMessages(prev => [...prev, userMessage]);
       setFaqInput('');
       setFaqLoading(true);
 
-      // Call AI to answer question about paper
+      // 2. Call AI API
       const response = await fetch('http://localhost:3000/api/ai/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: faqInput,
-          paperContent: paper.full_text || paper.description,
+          question: currentQuestion, 
+          paperId: paper.id, // ✅ Send ID so backend can fetch context
+          paperContent: paper.full_text || paper.description, // Fallback
           paperTitle: paper.title,
           authors: paper.authors_list?.join(', ') || 'Unknown'
         }),
@@ -152,7 +164,7 @@ const PaperDetail = () => {
 
       const data = await response.json();
 
-      // Add bot response
+      // 3. Add bot response to UI
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -190,11 +202,13 @@ const PaperDetail = () => {
 
   const getProxiedPdfUrl = () => {
     if (!paper.arxiv_id) return paper.pdf_url;
+    // Proxies through your backend to avoid CORS issues with ArXiv
     return `http://localhost:3000/api/pdf/proxy/${paper.arxiv_id}`;
   };
 
   const renderSummary = (text) => {
     return text.split('\n').map((line, idx) => {
+      // Header parsing
       if (line.startsWith('##')) {
         return (
           <h3 key={idx} className="text-xl font-bold text-[#3b2f20] mt-6 mb-3">
@@ -202,6 +216,7 @@ const PaperDetail = () => {
           </h3>
         );
       }
+      // List item parsing
       if (line.startsWith('-') || line.startsWith('•')) {
         return (
           <li key={idx} className="text-[#4a3c28] ml-6 mb-2">
@@ -209,9 +224,11 @@ const PaperDetail = () => {
           </li>
         );
       }
+      // Empty line parsing
       if (line.trim() === '') {
         return <div key={idx} className="h-2"></div>;
       }
+      // Standard paragraph
       return (
         <p key={idx} className="text-[#4a3c28] mb-2 leading-relaxed">
           {line}
@@ -220,6 +237,7 @@ const PaperDetail = () => {
     });
   };
 
+  // --- Loading State ---
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F3E5D8]">
@@ -231,6 +249,7 @@ const PaperDetail = () => {
     );
   }
 
+  // --- Not Found State ---
   if (!paper) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F3E5D8]">
@@ -247,6 +266,7 @@ const PaperDetail = () => {
     );
   }
 
+  // --- Main Render ---
   return (
     <div className="min-h-screen bg-[#F3E5D8]">
       {/* Header */}
@@ -301,12 +321,13 @@ const PaperDetail = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Content - Main Paper Info */}
+        {/* Left Content - Main Paper Info & Tabs */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Title & Metadata */}
+          
+          {/* Title & Metadata Card */}
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <h1 className="text-2xl md:text-4xl font-bold text-[#3b2f20] mb-4 leading-tight">
               {paper.title}
@@ -367,7 +388,7 @@ const PaperDetail = () => {
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs Section */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="flex flex-wrap border-b border-[#e5d3b3] bg-[#f8f1e4]">
               <button
@@ -409,6 +430,7 @@ const PaperDetail = () => {
 
             {/* Tab Content */}
             <div className="bg-white">
+              
               {/* Abstract Tab */}
               {activeTab === 'abstract' && (
                 <div className="p-6 md:p-8 min-h-[600px]">
@@ -565,6 +587,7 @@ const PaperDetail = () => {
         {/* Right Sidebar - FAQ Chatbot */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-[800px] sticky top-24">
+            
             {/* Header */}
             <div className="bg-gradient-to-r from-[#d18b2a] to-[#c17a1f] p-4 text-white">
               <div className="flex items-center gap-2 mb-1">
@@ -603,7 +626,7 @@ const PaperDetail = () => {
               )}
             </div>
 
-            {/* Input */}
+            {/* Input Area */}
             <div className="border-t border-[#e5d3b3] p-4 bg-white space-y-3">
               <div className="flex gap-2">
                 <input
