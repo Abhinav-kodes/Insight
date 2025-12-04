@@ -1,6 +1,6 @@
-# 🧠 INSIGHT — AI-Powered Knowledge & News Feed
+# 🧠 INSIGHTS — AI-Powered Knowledge & News Feed
 
-> **INSIGHT** is a personalized, AI-curated platform that connects ideas, research papers, and news across technology, AI, and innovation.  
+> **INSIGHTS** is a personalized, AI-curated platform that connects ideas, research papers, and news across technology, AI, and innovation.  
 > Designed for students, researchers, and enthusiasts who want **daily or weekly digests** from trusted sources — summarized by AI.
 
 ---

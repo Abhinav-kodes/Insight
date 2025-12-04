@@ -32,7 +32,7 @@ const HomeHeader = ({ userMode, interests }) => {
               <span>{label}</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold leading-tight">
-              Insight <br />
+              Insights <br />
               <span className="text-[#E7D0C5] italic">Engine.</span>
             </h1>
           </div>

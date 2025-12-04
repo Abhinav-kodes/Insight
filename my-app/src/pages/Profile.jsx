@@ -230,7 +230,7 @@ const Profile = () => {
                   
                   <div className="mt-6 flex flex-wrap gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1"><MapPin size={14}/> Earth</div>
-                    <div className="flex items-center gap-1"><LinkIcon size={14}/> insight.engine</div>
+                    <div className="flex items-center gap-1"><LinkIcon size={14}/> insights.engine</div>
                     <div className="flex items-center gap-1"><Calendar size={14}/> Joined 2025</div>
                   </div>
                 </div>

@@ -48,8 +48,8 @@ const FEATURES = [
 ];
 
 const FAQS = [
-  { q: "What is INSIGHT?", a: "INSIGHT is your intelligent knowledge companion. We curate, summarize, and rank the best content from the tech and research world." },
-  { q: "Is it free?", a: "Yes! The core features of INSIGHT are free for everyone. We also offer a Pro plan for power users." },
+  { q: "What is INSIGHTS?", a: "INSIGHTS is your intelligent knowledge companion. We curate, summarize, and rank the best content from the tech and research world." },
+  { q: "Is it free?", a: "Yes! The core features of INSIGHTS are free for everyone. We also offer a Pro plan for power users." },
   { q: "How does the AI work?", a: "We use state-of-the-art LLMs to analyze content, extract key insights, and generate concise summaries." },
 ];
 
@@ -77,7 +77,7 @@ export default function Landing() {
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
-                INSIGHT
+                INSIGHTS
               </span>
             </div>
 
@@ -189,7 +189,7 @@ export default function Landing() {
       {/* Features Grid */}
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Why Choose INSIGHT?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Why Choose INSIGHTS?</h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">We built a platform that respects your time and amplifies your learning.</p>
         </div>
 
@@ -220,7 +220,7 @@ export default function Landing() {
 
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to upgrade your information diet?</h2>
-          <p className="text-slate-300 text-lg mb-10 max-w-2xl mx-auto">Join thousands of professionals who start their day with INSIGHT.</p>
+          <p className="text-slate-300 text-lg mb-10 max-w-2xl mx-auto">Join thousands of professionals who start their day with INSIGHTS.</p>
 
           <form onSubmit={handleJoin} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input
@@ -263,11 +263,11 @@ export default function Landing() {
             <div className="bg-slate-900 p-1 rounded">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-slate-900">INSIGHT</span>
+            <span className="font-bold text-slate-900">INSIGHTS</span>
           </div>
 
           <div className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} Insight AI Inc. All rights reserved.
+            © {new Date().getFullYear()} Insights AI Inc. All rights reserved.
           </div>
 
           <div className="flex gap-6">
