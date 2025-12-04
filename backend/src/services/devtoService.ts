@@ -17,29 +17,40 @@ export interface DevToArticle {
   };
   public_reactions_count: number;
   reading_time_minutes: number;
-  // This field is only present after detailed fetch
-  body_markdown?: string; 
+  body_markdown?: string;
 }
 
 export class DevToService {
   private baseUrl = 'https://dev.to/api/articles';
-  
+
   private tags = [
-    'javascript', 'webdev', 'programming', 
+    'javascript', 'webdev', 'programming',
     'ai', 'machinelearning', 'datascience',
-    'python', 'react', 'node', 'devops'
+    'python', 'react', 'node', 'devops',
+    'systemdesign', 'database', 'security'
   ];
 
   private async sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // 1. Fetch List (Summary only)
-  async fetchArticlesByTag(tag: string, limit: number = 5): Promise<DevToArticle[]> {
+  // Updated to support 'top' articles (best of week/month)
+  async fetchArticlesByTag(tag: string, limit: number = 5, days: number = 1): Promise<DevToArticle[]> {
     try {
-      const response = await axios.get<DevToArticle[]>(this.baseUrl, {
-        params: { tag: tag, per_page: limit, state: 'rising' }
-      });
+      // Logic: If looking back more than 3 days, use "top" (best content).
+      // If looking back < 3 days, use "rising" (trending news).
+      const params: any = {
+        tag: tag,
+        per_page: limit,
+      };
+
+      if (days > 3) {
+        params.top = days; // e.g., 7 for top of the week
+      } else {
+        params.state = 'rising';
+      }
+
+      const response = await axios.get<DevToArticle[]>(this.baseUrl, { params });
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 429) console.warn(`⚠️ Rate limit (List) for ${tag}. Skipping...`);
@@ -48,7 +59,6 @@ export class DevToService {
     }
   }
 
-  // 2. Fetch Single Article (Full Text)
   async fetchArticleDetails(id: number): Promise<string | null> {
     try {
       const response = await axios.get<DevToArticle>(`${this.baseUrl}/${id}`);
@@ -59,49 +69,54 @@ export class DevToService {
     }
   }
 
-  // 3. Orchestrator
-  async fetchAllTags(hoursOld: number = 24): Promise<DevToArticle[]> {
+  // Changed argument to 'daysOld' for clarity
+  async fetchAllTags(daysOld: number = 1): Promise<DevToArticle[]> {
     const candidates: DevToArticle[] = [];
     const seenIds = new Set<number>();
-    
+
     const now = new Date();
-    const cutoffTime = new Date(now.getTime() - hoursOld * 60 * 60 * 1000);
+    // Calculate cutoff based on days
+    const cutoffTime = new Date(now.getTime() - daysOld * 24 * 60 * 60 * 1000);
 
-    console.log(`📡 1. Scanning tags for candidates...`);
+    console.log(`📡 1. Scanning tags for candidates (Past ${daysOld} days)...`);
 
-    // Step A: Gather candidates (Summaries only)
+    // Step A: Gather candidates
     for (const tag of this.tags) {
-      const articles = await this.fetchArticlesByTag(tag, 5); // Small batch per tag
-      
+      // Increase limit per tag to ensure we find enough matching the date filter
+      const articles = await this.fetchArticlesByTag(tag, 30, daysOld); 
+
       articles.forEach(article => {
         const pubDate = new Date(article.published_at);
-        if (pubDate >= cutoffTime && !seenIds.has(article.id)) {
+        // Filter: Must be newer than cutoff AND have a positive reaction count (quality check)
+        if (pubDate >= cutoffTime && !seenIds.has(article.id) && article.public_reactions_count > 5) {
           seenIds.add(article.id);
           candidates.push(article);
         }
       });
-      await this.sleep(1000); // 1s delay between tags
+      await this.sleep(1000); 
     }
 
-    // Step B: Fetch Full Text for unique candidates
-    console.log(`📡 2. Fetching full text for ${candidates.length} articles (this will take time)...`);
-    
+    // Step B: Fetch Full Text
+    // Limit to top 50 to prevent hitting rate limits too hard if we widen the window
+    const topCandidates = candidates
+      .sort((a, b) => b.public_reactions_count - a.public_reactions_count)
+      .slice(0, 50);
+
+    console.log(`📡 2. Fetching full text for ${topCandidates.length} articles...`);
+
     const finalArticles: DevToArticle[] = [];
 
-    for (const article of candidates) {
-      // Fetch the full markdown
+    for (const article of topCandidates) {
       const fullText = await this.fetchArticleDetails(article.id);
-      
+
       if (fullText) {
         article.body_markdown = fullText;
         finalArticles.push(article);
         console.log(`   ✅ Got text for: ${article.title.substring(0, 30)}...`);
       }
-
-      // ⏳ CRITICAL: 1.5s delay to prevent 429 errors on detail fetch
-      await this.sleep(1500); 
+      await this.sleep(1500);
     }
 
-    return finalArticles.sort((a, b) => b.public_reactions_count - a.public_reactions_count);
+    return finalArticles;
   }
 }

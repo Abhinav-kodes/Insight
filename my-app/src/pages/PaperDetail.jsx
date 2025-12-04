@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
 
 // PDF Viewer Styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+// Syntax Highlighting for Dev.to articles
+import 'highlight.js/styles/github.css';
 
 import { supabase } from '../lib/supabaseClient';
 import { 
@@ -25,7 +30,9 @@ import {
   Check,
   Send,
   MessageCircle,
-  Loader
+  Loader,
+  Coffee, // Icon for Blog reading
+  Heart   // Icon for Blog reactions
 } from 'lucide-react';
 
 const PaperDetail = () => {
@@ -55,7 +62,7 @@ const PaperDetail = () => {
     {
       id: 1,
       type: 'bot',
-      text: 'Hi! 👋 I\'m your research paper assistant. Ask me any questions about this paper and I\'ll help you understand it better!'
+      text: 'Hi! 👋 I\'m your AI assistant. Ask me any questions about this content and I\'ll help you understand it better!'
     }
   ]);
   const [faqInput, setFaqInput] = useState('');
@@ -81,6 +88,14 @@ const PaperDetail = () => {
       if (error) throw error;
 
       setPaper(data);
+
+      // Set default tab based on content type
+      if (data.content_type !== 'research_paper') {
+        setActiveTab('read'); // Default to reading mode for blogs
+      } else {
+        setActiveTab('abstract'); // Default to abstract for papers
+      }
+
     } catch (error) {
       console.error('Error fetching paper:', error);
     } finally {
@@ -105,8 +120,8 @@ const PaperDetail = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paperId: paper.id, // ✅ Send ID for server-side fetching
-          fullText: paper.full_text, // Keep for backward compatibility
+          paperId: paper.id, 
+          fullText: paper.full_text,
           systemPrompt: systemPrompt || undefined,
         }),
       });
@@ -130,7 +145,7 @@ const PaperDetail = () => {
   const askFaq = async () => {
     if (!faqInput.trim()) return;
 
-    const currentQuestion = faqInput; // Capture text before clearing state
+    const currentQuestion = faqInput; 
 
     try {
       // 1. Add user message to UI immediately
@@ -151,8 +166,8 @@ const PaperDetail = () => {
         },
         body: JSON.stringify({
           question: currentQuestion, 
-          paperId: paper.id, // ✅ Send ID so backend can fetch context
-          paperContent: paper.full_text || paper.description, // Fallback
+          paperId: paper.id, 
+          paperContent: paper.full_text || paper.description, 
           paperTitle: paper.title,
           authors: paper.authors_list?.join(', ') || 'Unknown'
         }),
@@ -243,7 +258,7 @@ const PaperDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#F3E5D8]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B6F47] mx-auto mb-4"></div>
-          <p className="text-[#4a3c28]">Loading paper...</p>
+          <p className="text-[#4a3c28]">Loading content...</p>
         </div>
       </div>
     );
@@ -254,7 +269,7 @@ const PaperDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F3E5D8]">
         <div className="text-center">
-          <p className="text-[#4a3c28] mb-4">Paper not found</p>
+          <p className="text-[#4a3c28] mb-4">Content not found</p>
           <button
             onClick={() => navigate('/home')}
             className="bg-[#C6B29A] hover:bg-[#B89F8A] text-white px-6 py-2 rounded-full"
@@ -265,6 +280,9 @@ const PaperDetail = () => {
       </div>
     );
   }
+
+  // Helper to check type
+  const isPaper = paper.content_type === 'research_paper';
 
   // --- Main Render ---
   return (
@@ -289,7 +307,7 @@ const PaperDetail = () => {
                     ? 'bg-[#6b8cff] text-white' 
                     : 'bg-white text-[#4a3c28] hover:bg-[#f8f1e4]'
                 }`}
-                title="Upvote"
+                title={isPaper ? "Upvote" : "Like"}
               >
                 <ThumbsUp size={18} />
               </button>
@@ -306,16 +324,28 @@ const PaperDetail = () => {
                 <Bookmark size={18} />
               </button>
 
-              <a
-                href={paper.pdf_url}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-[#C6B29A] hover:bg-[#B89F8A] text-white px-3 md:px-4 py-2 rounded-full transition"
-              >
-                <Download size={18} />
-                <span className="hidden md:inline">Download</span>
-              </a>
+              {isPaper ? (
+                <a
+                  href={paper.pdf_url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-[#C6B29A] hover:bg-[#B89F8A] text-white px-3 md:px-4 py-2 rounded-full transition"
+                >
+                  <Download size={18} />
+                  <span className="hidden md:inline">Download</span>
+                </a>
+              ) : (
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white px-3 md:px-4 py-2 rounded-full transition"
+                >
+                  <ExternalLink size={18} />
+                  <span className="hidden md:inline">Read on Dev.to</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -328,69 +358,99 @@ const PaperDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Title & Metadata Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-            <h1 className="text-2xl md:text-4xl font-bold text-[#3b2f20] mb-4 leading-tight">
-              {paper.title}
-            </h1>
-
-            <div className="flex flex-wrap items-center gap-3 md:gap-4 text-[#4a3c28b3] text-sm md:text-base mb-4">
-              <div className="flex items-center gap-2">
-                <Users size={18} />
-                <span>
-                  {paper.authors_list && paper.authors_list.length > 0
-                    ? paper.authors_list.slice(0, 3).join(', ') +
-                      (paper.authors_list.length > 3 ? ` +${paper.authors_list.length - 3}` : '')
-                    : 'Unknown Authors'}
-                </span>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Conditional Cover Image for Blogs */}
+            {!isPaper && paper.thumbnail && (
+              <div className="h-48 md:h-64 w-full overflow-hidden relative">
+                 <img src={paper.thumbnail} alt="Cover" className="w-full h-full object-cover" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+            )}
+            
+            <div className="p-6 md:p-8">
+              {/* Type Badge */}
+              <div className="mb-4">
+                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    isPaper ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {isPaper ? 'Research Paper' : 'Tech Article'}
+                  </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Calendar size={18} />
-                <span>{formatDate(paper.publication_date)}</span>
-              </div>
+              <h1 className="text-2xl md:text-4xl font-bold text-[#3b2f20] mb-4 leading-tight">
+                {paper.title}
+              </h1>
 
-              {paper.citations_count > 0 && (
+              <div className="flex flex-wrap items-center gap-3 md:gap-4 text-[#4a3c28b3] text-sm md:text-base mb-4">
                 <div className="flex items-center gap-2">
-                  <BookOpen size={18} />
-                  <span>{paper.citations_count} citations</span>
+                  <Users size={18} />
+                  <span>
+                    {paper.authors_list && paper.authors_list.length > 0
+                      ? paper.authors_list.slice(0, 3).join(', ') +
+                        (paper.authors_list.length > 3 ? ` +${paper.authors_list.length - 3}` : '')
+                      : 'Unknown Authors'}
+                  </span>
                 </div>
-              )}
-            </div>
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {paper.tags && paper.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-1 bg-[#f0e6d8] px-3 py-1 rounded-full text-xs md:text-sm text-[#765a3f]"
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} />
+                  <span>{formatDate(paper.publication_date)}</span>
+                </div>
+
+                {/* Conditional Metric: Citations for Papers, Likes for Blogs */}
+                {isPaper ? (
+                  paper.citations_count > 0 && (
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={18} />
+                      <span>{paper.citations_count} citations</span>
+                    </div>
+                  )
+                ) : (
+                  (paper.metadata?.reactions || 0) > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Heart size={18} className="text-pink-500" />
+                      <span>{paper.metadata.reactions} reactions</span>
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {paper.tags && paper.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 bg-[#f0e6d8] px-3 py-1 rounded-full text-xs md:text-sm text-[#765a3f]"
+                  >
+                    <Tag size={14} />
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* External Links */}
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-[#e5d3b3]">
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[#4a3c28] hover:text-[#3b2f20] text-sm transition"
                 >
-                  <Tag size={14} />
-                  {tag}
-                </span>
-              ))}
-            </div>
-
-            {/* External Links */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-[#e5d3b3]">
-              <a
-                href={paper.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[#4a3c28] hover:text-[#3b2f20] text-sm transition"
-              >
-                <ExternalLink size={16} />
-                View on ArXiv
-              </a>
-              <button className="flex items-center gap-2 text-[#4a3c28] hover:text-[#3b2f20] text-sm transition">
-                <Share2 size={16} />
-                Share
-              </button>
+                  <ExternalLink size={16} />
+                  View Original Source
+                </a>
+                <button className="flex items-center gap-2 text-[#4a3c28] hover:text-[#3b2f20] text-sm transition">
+                  <Share2 size={16} />
+                  Share
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Tabs Section */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="flex flex-wrap border-b border-[#e5d3b3] bg-[#f8f1e4]">
+              {/* Abstract Tab - Available for both */}
               <button
                 onClick={() => setActiveTab('abstract')}
                 className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${
@@ -402,17 +462,33 @@ const PaperDetail = () => {
                 📋 Abstract
               </button>
 
-              <button
-                onClick={() => setActiveTab('pdf')}
-                className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${
-                  activeTab === 'pdf'
-                    ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
-                    : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
-                }`}
-              >
-                📄 PDF Viewer
-              </button>
+              {/* Conditional Tab: PDF Viewer vs Read Article */}
+              {isPaper ? (
+                <button
+                  onClick={() => setActiveTab('pdf')}
+                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${
+                    activeTab === 'pdf'
+                      ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
+                      : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
+                  }`}
+                >
+                  📄 PDF Viewer
+                </button>
+              ) : (
+                <button
+                  onClick={() => setActiveTab('read')}
+                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base flex items-center justify-center gap-2 ${
+                    activeTab === 'read'
+                      ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
+                      : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
+                  }`}
+                >
+                  <Coffee size={18} />
+                  Read Article
+                </button>
+              )}
 
+              {/* AI Summary Tab - Available for both if full_text exists */}
               {paper.full_text && (
                 <button
                   onClick={() => setActiveTab('ai-summary')}
@@ -441,8 +517,8 @@ const PaperDetail = () => {
                 </div>
               )}
 
-              {/* PDF Viewer Tab */}
-              {activeTab === 'pdf' && (
+              {/* PDF Viewer Tab (Only for Papers) */}
+              {activeTab === 'pdf' && isPaper && (
                 <div className="relative bg-gray-100" style={{ height: '900px' }}>
                   {pdfError && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
@@ -474,6 +550,15 @@ const PaperDetail = () => {
                       />
                     </Worker>
                   )}
+                </div>
+              )}
+
+              {/* Read Tab (Markdown for Dev.to Articles) */}
+              {activeTab === 'read' && !isPaper && (
+                <div className="p-8 prose prose-stone max-w-none prose-headings:font-serif prose-a:text-[#d18b2a] prose-img:rounded-xl">
+                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                    {paper.full_text || paper.description}
+                  </ReactMarkdown>
                 </div>
               )}
 
@@ -594,7 +679,7 @@ const PaperDetail = () => {
                 <MessageCircle size={20} />
                 <h3 className="font-bold text-lg">Paper Q&A</h3>
               </div>
-              <p className="text-xs text-orange-100">Ask questions about this paper</p>
+              <p className="text-xs text-orange-100">Ask questions about this content</p>
             </div>
 
             {/* Messages Container */}
@@ -634,7 +719,7 @@ const PaperDetail = () => {
                   value={faqInput}
                   onChange={(e) => setFaqInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && askFaq()}
-                  placeholder="Ask about this paper..."
+                  placeholder="Ask a question..."
                   className="flex-1 px-3 py-2 border border-[#e5d3b3] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C6B29A]"
                   disabled={faqLoading}
                 />

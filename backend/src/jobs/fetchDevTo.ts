@@ -6,10 +6,10 @@ const devToService = new DevToService();
 export class DevToFetchJob {
   async fetchAndSaveArticles(hoursOld: number = 24) {
     try {
-      console.log(`🚀 Starting Dev.to Job...`);
+      const days = Math.ceil(hoursOld / 24);
+      console.log(`🚀 Starting Dev.to Job (Lookback: ${days} days)...`);
       
-      // This will now take longer as it fetches full text inside
-      const articles = await devToService.fetchAllTags(hoursOld);
+      const articles = await devToService.fetchAllTags(days);
       
       if (articles.length === 0) {
         console.log('⚠️  No articles found');
@@ -22,11 +22,14 @@ export class DevToFetchJob {
         title: article.title,
         url: article.url,
         description: article.description || `${article.title} by ${article.user.name}`,
-        // 👇 MAP FULL TEXT HERE
         full_text: article.body_markdown, 
         authors_list: [article.user.name], 
         tags: article.tag_list || [],
         thumbnail: article.cover_image || article.social_image,
+        
+        // ✅ FIX: Map the publication date from the API response
+        publication_date: article.published_at, 
+        
         scraped_at: new Date().toISOString(),
         metadata: {
           reactions: article.public_reactions_count,
@@ -37,7 +40,6 @@ export class DevToFetchJob {
 
       console.log('📝 Checking for duplicates...');
 
-      // Check URL duplicates
       const urls = articlesToInsert.map(a => a.url);
       const { data: existingArticles } = await supabase
         .from('content')
