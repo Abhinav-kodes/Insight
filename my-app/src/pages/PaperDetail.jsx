@@ -13,12 +13,12 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import 'highlight.js/styles/github.css';
 
 import { supabase } from '../lib/supabaseClient';
-import { 
-  ArrowLeft, 
-  Download, 
-  ExternalLink, 
-  BookOpen, 
-  Users, 
+import {
+  ArrowLeft,
+  Download,
+  ExternalLink,
+  BookOpen,
+  Users,
   Calendar,
   Tag,
   Bookmark,
@@ -32,24 +32,26 @@ import {
   MessageCircle,
   Loader,
   Coffee, // Icon for Blog reading
-  Heart   // Icon for Blog reactions
+  Heart,  // Icon for Blog reactions
+  Newspaper, // Icon for News
+  Globe     // Icon for Source
 } from 'lucide-react';
 
 const PaperDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // Data States
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('abstract');
-  
+
   // User Interaction States
   const [upvoted, setUpvoted] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pdfError, setPdfError] = useState(null);
   const [copied, setCopied] = useState(false);
-  
+
   // AI Summary States
   const [aiSummary, setAiSummary] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -78,7 +80,7 @@ const PaperDetail = () => {
   const fetchPaperDetails = async () => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('content')
         .select('*')
@@ -120,7 +122,7 @@ const PaperDetail = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paperId: paper.id, 
+          paperId: paper.id,
           fullText: paper.full_text,
           systemPrompt: systemPrompt || undefined,
         }),
@@ -145,7 +147,7 @@ const PaperDetail = () => {
   const askFaq = async () => {
     if (!faqInput.trim()) return;
 
-    const currentQuestion = faqInput; 
+    const currentQuestion = faqInput;
 
     try {
       // 1. Add user message to UI immediately
@@ -165,9 +167,9 @@ const PaperDetail = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: currentQuestion, 
-          paperId: paper.id, 
-          paperContent: paper.full_text || paper.description, 
+          question: currentQuestion,
+          paperId: paper.id,
+          paperContent: paper.full_text || paper.description,
           paperTitle: paper.title,
           authors: paper.authors_list?.join(', ') || 'Unknown'
         }),
@@ -283,6 +285,8 @@ const PaperDetail = () => {
 
   // Helper to check type
   const isPaper = paper.content_type === 'research_paper';
+  const isBlog = paper.content_type === 'devto_article' || paper.content_type === 'hobby_article';
+  const isNews = paper.content_type === 'news_article';
 
   // --- Main Render ---
   return (
@@ -302,11 +306,10 @@ const PaperDetail = () => {
             <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={() => setUpvoted(!upvoted)}
-                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full transition ${
-                  upvoted 
-                    ? 'bg-[#6b8cff] text-white' 
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full transition ${upvoted
+                    ? 'bg-[#6b8cff] text-white'
                     : 'bg-white text-[#4a3c28] hover:bg-[#f8f1e4]'
-                }`}
+                  }`}
                 title={isPaper ? "Upvote" : "Like"}
               >
                 <ThumbsUp size={18} />
@@ -314,11 +317,10 @@ const PaperDetail = () => {
 
               <button
                 onClick={() => setSaved(!saved)}
-                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full transition ${
-                  saved 
-                    ? 'bg-[#d18b2a] text-white' 
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full transition ${saved
+                    ? 'bg-[#d18b2a] text-white'
                     : 'bg-white text-[#4a3c28] hover:bg-[#f8f1e4]'
-                }`}
+                  }`}
                 title="Save"
               >
                 <Bookmark size={18} />
@@ -335,7 +337,7 @@ const PaperDetail = () => {
                   <Download size={18} />
                   <span className="hidden md:inline">Download</span>
                 </a>
-              ) : (
+              ) : isBlog ? (
                 <a
                   href={paper.url}
                   target="_blank"
@@ -345,6 +347,16 @@ const PaperDetail = () => {
                   <ExternalLink size={18} />
                   <span className="hidden md:inline">Read on Dev.to</span>
                 </a>
+              ) : (
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-3 md:px-4 py-2 rounded-full transition"
+                >
+                  <ExternalLink size={18} />
+                  <span className="hidden md:inline">Read Original</span>
+                </a>
               )}
             </div>
           </div>
@@ -353,28 +365,38 @@ const PaperDetail = () => {
 
       {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Content - Main Paper Info & Tabs */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Title & Metadata Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Conditional Cover Image for Blogs */}
             {!isPaper && paper.thumbnail && (
               <div className="h-48 md:h-64 w-full overflow-hidden relative">
-                 <img src={paper.thumbnail} alt="Cover" className="w-full h-full object-cover" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <img src={paper.thumbnail} alt="Cover" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
               </div>
             )}
-            
+
             <div className="p-6 md:p-8">
               {/* Type Badge */}
-              <div className="mb-4">
-                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    isPaper ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+              <div className="mb-4 flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${isPaper ? 'bg-blue-100 text-blue-700' :
+                    isBlog ? 'bg-emerald-100 text-emerald-700' :
+                      'bg-purple-100 text-purple-700'
                   }`}>
-                    {isPaper ? 'Research Paper' : 'Tech Article'}
+                  {isPaper && <BookOpen size={14} />}
+                  {isBlog && <Coffee size={14} />}
+                  {isNews && <Newspaper size={14} />}
+                  {isPaper ? 'Research Paper' : isBlog ? 'Tech Article' : 'News'}
+                </span>
+                {isNews && paper.metadata?.source && (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-700 flex items-center gap-1">
+                    <Globe size={14} />
+                    {paper.metadata.source}
                   </span>
+                )}
               </div>
 
               <h1 className="text-2xl md:text-4xl font-bold text-[#3b2f20] mb-4 leading-tight">
@@ -387,7 +409,7 @@ const PaperDetail = () => {
                   <span>
                     {paper.authors_list && paper.authors_list.length > 0
                       ? paper.authors_list.slice(0, 3).join(', ') +
-                        (paper.authors_list.length > 3 ? ` +${paper.authors_list.length - 3}` : '')
+                      (paper.authors_list.length > 3 ? ` +${paper.authors_list.length - 3}` : '')
                       : 'Unknown Authors'}
                   </span>
                 </div>
@@ -397,21 +419,24 @@ const PaperDetail = () => {
                   <span>{formatDate(paper.publication_date)}</span>
                 </div>
 
-                {/* Conditional Metric: Citations for Papers, Likes for Blogs */}
-                {isPaper ? (
-                  paper.citations_count > 0 && (
-                    <div className="flex items-center gap-2">
-                      <BookOpen size={18} />
-                      <span>{paper.citations_count} citations</span>
-                    </div>
-                  )
-                ) : (
-                  (paper.metadata?.reactions || 0) > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Heart size={18} className="text-pink-500" />
-                      <span>{paper.metadata.reactions} reactions</span>
-                    </div>
-                  )
+                {/* Conditional Metric: Citations for Papers, Likes for Blogs, Source for News */}
+                {isPaper && paper.citations_count > 0 && (
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={18} />
+                    <span>{paper.citations_count} citations</span>
+                  </div>
+                )}
+                {isBlog && (paper.metadata?.reactions || 0) > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Heart size={18} className="text-pink-500" />
+                    <span>{paper.metadata.reactions} reactions</span>
+                  </div>
+                )}
+                {isNews && paper.metadata?.country && (
+                  <div className="flex items-center gap-2">
+                    <Globe size={18} className="text-purple-500" />
+                    <span className="uppercase">{Array.isArray(paper.metadata.country) ? paper.metadata.country[0] : paper.metadata.country}</span>
+                  </div>
                 )}
               </div>
 
@@ -453,11 +478,10 @@ const PaperDetail = () => {
               {/* Abstract Tab - Available for both */}
               <button
                 onClick={() => setActiveTab('abstract')}
-                className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${
-                  activeTab === 'abstract'
+                className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${activeTab === 'abstract'
                     ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
                     : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
-                }`}
+                  }`}
               >
                 📋 Abstract
               </button>
@@ -466,22 +490,20 @@ const PaperDetail = () => {
               {isPaper ? (
                 <button
                   onClick={() => setActiveTab('pdf')}
-                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${
-                    activeTab === 'pdf'
+                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base ${activeTab === 'pdf'
                       ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
                       : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
-                  }`}
+                    }`}
                 >
                   📄 PDF Viewer
                 </button>
               ) : (
                 <button
                   onClick={() => setActiveTab('read')}
-                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base flex items-center justify-center gap-2 ${
-                    activeTab === 'read'
+                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base flex items-center justify-center gap-2 ${activeTab === 'read'
                       ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
                       : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
-                  }`}
+                    }`}
                 >
                   <Coffee size={18} />
                   Read Article
@@ -492,11 +514,10 @@ const PaperDetail = () => {
               {paper.full_text && (
                 <button
                   onClick={() => setActiveTab('ai-summary')}
-                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base flex items-center justify-center gap-2 ${
-                    activeTab === 'ai-summary'
+                  className={`flex-1 min-w-[100px] px-4 py-4 font-semibold transition text-sm md:text-base flex items-center justify-center gap-2 ${activeTab === 'ai-summary'
                       ? 'bg-white text-[#3b2f20] border-b-2 border-[#C6B29A]'
                       : 'text-[#4a3c28b3] hover:bg-white hover:bg-opacity-50'
-                  }`}
+                    }`}
                 >
                   <Sparkles size={16} />
                   <span>AI Summary</span>
@@ -506,7 +527,7 @@ const PaperDetail = () => {
 
             {/* Tab Content */}
             <div className="bg-white">
-              
+
               {/* Abstract Tab */}
               {activeTab === 'abstract' && (
                 <div className="p-6 md:p-8 min-h-[600px]">
@@ -553,12 +574,19 @@ const PaperDetail = () => {
                 </div>
               )}
 
-              {/* Read Tab (Markdown for Dev.to Articles) */}
+              {/* Read Tab (For Blogs & News) */}
               {activeTab === 'read' && !isPaper && (
                 <div className="p-8 prose prose-stone max-w-none prose-headings:font-serif prose-a:text-[#d18b2a] prose-img:rounded-xl">
-                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                    {paper.full_text || paper.description}
-                  </ReactMarkdown>
+                  {isBlog ? (
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                      {paper.full_text || paper.description}
+                    </ReactMarkdown>
+                  ) : (
+                    // News articles - plain text with proper formatting
+                    <div className="whitespace-pre-wrap text-[#4a3c28] leading-relaxed text-lg">
+                      {paper.full_text || paper.description}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -570,7 +598,7 @@ const PaperDetail = () => {
                       <Sparkles size={28} className="text-[#d18b2a]" />
                       AI Summary
                     </h2>
-                    
+
                     <button
                       onClick={() => setShowPromptEditor(!showPromptEditor)}
                       className="text-sm text-[#4a3c28] hover:text-[#3b2f20] underline"
@@ -672,7 +700,7 @@ const PaperDetail = () => {
         {/* Right Sidebar - FAQ Chatbot */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-[800px] sticky top-24">
-            
+
             {/* Header */}
             <div className="bg-gradient-to-r from-[#d18b2a] to-[#c17a1f] p-4 text-white">
               <div className="flex items-center gap-2 mb-1">
@@ -690,13 +718,12 @@ const PaperDetail = () => {
                   className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
-                      msg.type === 'user'
+                    className={`max-w-xs px-4 py-2 rounded-lg text-sm ${msg.type === 'user'
                         ? 'bg-[#C6B29A] text-white rounded-br-none'
                         : msg.isError
-                        ? 'bg-red-100 text-red-700 rounded-bl-none'
-                        : 'bg-white text-[#4a3c28] border border-[#e5d3b3] rounded-bl-none'
-                    }`}
+                          ? 'bg-red-100 text-red-700 rounded-bl-none'
+                          : 'bg-white text-[#4a3c28] border border-[#e5d3b3] rounded-bl-none'
+                      }`}
                   >
                     {msg.text}
                   </div>

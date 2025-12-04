@@ -7,17 +7,21 @@ import cors from 'cors';
 import { authMiddleware, AuthRequest } from './middleware/auth';
 import { supabase } from './services/supabase';
 
-// Jobs
-import { PaperFetchJob } from './jobs/fetchPapers';
-import { ContentParserJob } from './jobs/parseContent';
-import { DevToFetchJob } from './jobs/fetchDevTo';
-import { NewsFetchJob } from './jobs/fetchNews'; // 🆕 Import News Job
+// Scheduler with job instances
+import {
+  startScheduler,
+  triggerAllJobs,
+  paperFetchJob,
+  contentParserJob,
+  devToFetchJob,
+  newsFetchJob
+} from './scheduler';
 
 // Routes
 import pdfRouter from './routes/pdf';
 import aiRouter from './routes/ai';
 import devToRouter from './routes/devTo';
-import newsRouter from './routes/news'; // 🆕 Import News Router
+import newsRouter from './routes/news';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,19 +46,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Initialize Jobs
-const paperFetchJob = new PaperFetchJob();
-const contentParserJob = new ContentParserJob();
-const devToFetchJob = new DevToFetchJob();
-const newsFetchJob = new NewsFetchJob(); // 🆕 Initialize News Job
-
 // Health check
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     geminiConfigured: !!process.env.GEMINI_API_KEY,
-    newsDataConfigured: !!process.env.NEWSDATA_API_KEY, // Check News Key
+    newsDataConfigured: !!process.env.NEWSDATA_API_KEY,
+    cronEnabled: process.env.ENABLE_CRON === 'true',
     env: process.env.NODE_ENV || 'development'
   });
 });
@@ -73,7 +72,7 @@ app.post('/api/fetch-papers', async (req: Request, res: Response) => {
   try {
     res.json({ message: 'Paper fetch started in background' });
     console.log('🚀 Fetch triggered!');
-    
+
     paperFetchJob.fetchPapersForAllInterests().catch(console.error);
   } catch (error) {
     console.error('❌ Error triggering paper fetch:', error);
@@ -86,7 +85,7 @@ app.post('/api/parse-papers', async (req: Request, res: Response) => {
   try {
     res.json({ message: 'PDF parsing started in background' });
     console.log('🚀 Parse triggered!');
-    
+
     contentParserJob.parseUnparsedPapers().catch(console.error);
   } catch (error) {
     console.error('❌ Error triggering parse:', error);
@@ -99,7 +98,7 @@ app.post('/api/parse-all-papers', async (req: Request, res: Response) => {
   try {
     res.json({ message: 'Batch PDF parsing started in background' });
     console.log('🚀 Batch parse triggered!');
-    
+
     contentParserJob.parseAllPapers().catch(console.error);
   } catch (error) {
     console.error('❌ Error triggering batch parse:', error);
@@ -112,7 +111,7 @@ app.post('/api/parse-paper/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     res.json({ message: `Parsing paper ${id}` });
-    
+
     contentParserJob.parsePaperById(id).catch(console.error);
   } catch (error) {
     res.status(500).json({ error: 'Failed to parse paper' });
@@ -155,10 +154,10 @@ app.post('/api/fetch-devto', async (req: Request, res: Response) => {
   try {
     // Default to 24 hours lookback if not specified
     const hours = req.body?.hours ? parseInt(req.body.hours) : 24;
-    
+
     res.json({ message: `Dev.to article fetch started (last ${hours}h) in background` });
     console.log('🚀 Dev.to fetch triggered!');
-    
+
     devToFetchJob.fetchAndSaveArticles(hours).catch(console.error);
   } catch (error) {
     console.error('❌ Error triggering Dev.to fetch:', error);
@@ -174,11 +173,28 @@ app.post('/api/fetch-news', async (req: Request, res: Response) => {
   try {
     res.json({ message: 'News fetch started in background' });
     console.log('🚀 News fetch triggered!');
-    
+
     newsFetchJob.fetchAndSaveNews().catch(console.error);
   } catch (error) {
     console.error('❌ Error triggering news fetch:', error);
     res.status(500).json({ error: 'Failed to start fetch' });
+  }
+});
+
+// ==========================================
+// ⏰ CRON JOB CONTROLS
+// ==========================================
+
+// Trigger all jobs manually (useful for testing or manual refresh)
+app.post('/api/refresh-all', async (req: Request, res: Response) => {
+  try {
+    res.json({ message: 'Full content refresh started in background' });
+    console.log('🚀 Manual full refresh triggered!');
+
+    triggerAllJobs().catch(console.error);
+  } catch (error) {
+    console.error('❌ Error triggering full refresh:', error);
+    res.status(500).json({ error: 'Failed to start refresh' });
   }
 });
 
@@ -188,8 +204,8 @@ app.post('/api/fetch-news', async (req: Request, res: Response) => {
 
 app.use('/api/pdf', pdfRouter);
 app.use('/api/ai', aiRouter);
-app.use('/api/devto', devToRouter); 
-app.use('/api/news', newsRouter); // 🆕 News Routes
+app.use('/api/devto', devToRouter);
+app.use('/api/news', newsRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -213,9 +229,14 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📚 Researcher Mode (ArXiv) active`);
   console.log(`👩‍💻 Hobbyist Mode (Dev.to) active`);
-  console.log(`📰 Trend Watcher Mode (NewsData) active`); // 🆕 Log
+  console.log(`📰 Trend Watcher Mode (NewsData) active`);
   console.log(`🤖 Gemini API: ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log(`📧 Resend Email: ${process.env.RESEND_API_KEY ? '✅ Configured' : '⚠️  Not configured'}`);
+  console.log('='.repeat(50));
+
+  // Start the cron scheduler
+  startScheduler();
+
   console.log('='.repeat(50) + '\n');
 });
 
