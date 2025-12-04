@@ -1,293 +1,292 @@
 // services/tagImageMapper.js
 
-// Using Unsplash IDs with optimization parameters for better performance and relevance
-const getUnsplashUrl = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+const getUnsplashUrl = (id) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
 
 export const tagImageMap = {
   // --- Computer Science & AI ---
   'Machine Learning': {
-    image: getUnsplashUrl('1555949963-ff9fe0c870eb'), // Neural network visualization
+    image: getUnsplashUrl('1534723452862-4c874018d66d'),
     color: '#3B82F6',
     bgColor: '#EFF6FF'
   },
   'Deep Learning': {
-    image: getUnsplashUrl('1677442120464-5e58c9c74091'), // Abstract AI brain/nodes
+    image: getUnsplashUrl('1542831371-29b0f74f9713'),
     color: '#8B5CF6',
     bgColor: '#F5F3FF'
   },
   'Computer Vision': {
-    image: getUnsplashUrl('1526374965328-7f61d4dc18c5'), // Cyberpunk eye/lens
+    image: getUnsplashUrl('1504384308090-c54beed1f92b'),
     color: '#EC4899',
     bgColor: '#FDF2F8'
   },
   'Natural Language Processing': {
-    image: getUnsplashUrl('1555421689-491a97ff4181'), // Text/Code analysis
+    image: getUnsplashUrl('1526378722484-d6a56f1a2a8b'),
     color: '#F59E0B',
     bgColor: '#FFFBEB'
   },
   'Reinforcement Learning': {
-    image: getUnsplashUrl('1535378437261-27fa533c7270'), // Robot/AI interaction
+    image: getUnsplashUrl('1581092918983-6a7c9a57a5bc'),
     color: '#10B981',
     bgColor: '#ECFDF5'
   },
   'Algorithms & Data Structures': {
-    image: getUnsplashUrl('1509228911820-9171f1e44bbc'), // Mathematical geometric structure
+    image: getUnsplashUrl('1518779578993-ec3579fee39f'),
     color: '#6366F1',
     bgColor: '#EEF2FF'
   },
   'Distributed Systems': {
-    image: getUnsplashUrl('1558494949-efc5270f9c63'), // Server farm/connections
+    image: getUnsplashUrl('1518770660439-4636190af475'),
     color: '#0891B2',
     bgColor: '#ECFEFF'
   },
   'Quantum Computing': {
-    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Quantum dilution refrigerator (Gold)
+    image: getUnsplashUrl('1607799279861-927d6d98c73a'),
     color: '#7C3AED',
     bgColor: '#F5F3FF'
   },
 
   // --- Physics & Mathematics ---
   'Quantum Physics': {
-    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Quantum rig
+    image: getUnsplashUrl('1607799279861-927d6d98c73a'),
     color: '#7C3AED',
     bgColor: '#F5F3FF'
   },
   'Theoretical Physics': {
-    image: getUnsplashUrl('1636466438044-98361c420259'), // Blackboard formulas
+    image: getUnsplashUrl('1525909002-1b05e0c869d8'),
     color: '#8B5CF6',
     bgColor: '#F5F3FF'
   },
   'Applied Mathematics': {
-    image: getUnsplashUrl('1635070041078-e363dbe005cb'), // Abstract math/geometry
+    image: getUnsplashUrl('1526374965328-7f61d4dc18c5'),
     color: '#3B82F6',
     bgColor: '#EFF6FF'
   },
   'Statistical Mechanics': {
-    image: getUnsplashUrl('1532094349884-543bc11b234d'), // Particles/Abstract
+    image: getUnsplashUrl('1482192596544-9eb780fc7f66'),
     color: '#F97316',
     bgColor: '#FFF7ED'
   },
   'Topology': {
-    image: getUnsplashUrl('1614730370824-788968953186'), // Abstract shapes/Mobius strip vibe
+    image: getUnsplashUrl('1545235617-46c48f884158'),
     color: '#06B6D4',
     bgColor: '#ECFEFF'
   },
   'Number Theory': {
-    image: getUnsplashUrl('1596495578062-b361124ebd79'), // Numbers/Math art
+    image: getUnsplashUrl('1529070538774-1843cb3265df'),
     color: '#6366F1',
     bgColor: '#EEF2FF'
   },
 
   // --- Biology & Medicine ---
   'Genomics': {
-    image: getUnsplashUrl('1530026405186-ed1f139313f8'), // DNA Helix
+    image: getUnsplashUrl('1559757175-5700dde67597'),
     color: '#EC4899',
     bgColor: '#FDF2F8'
   },
   'Neuroscience': {
-    image: getUnsplashUrl('1559757609-f31090325761'), // Brain scan/neurons
+    image: getUnsplashUrl('1535930749574-1399327ce78f'),
     color: '#8B5CF6',
     bgColor: '#F5F3FF'
   },
   'Bioinformatics': {
-    image: getUnsplashUrl('1576086213369-97a306d36557'), // Lab tech/Microscope
+    image: getUnsplashUrl('1581093588401-22e0a4b5cda1'),
     color: '#059669',
     bgColor: '#ECFDF5'
   },
   'Drug Discovery': {
-    image: getUnsplashUrl('1584328843804-edbfd73c7602'), // Chemical structure/molecules
+    image: getUnsplashUrl('1581091012184-5c2af86d6c33'),
     color: '#F43F5E',
     bgColor: '#FFF1F2'
   },
   'Synthetic Biology': {
-    image: getUnsplashUrl('1532187863486-03cda88e0e4e'), // Petri dishes/Lab
+    image: getUnsplashUrl('1559757175-2b2cd0feebf1'),
     color: '#06B6D4',
     bgColor: '#ECFEFF'
   },
   'Immunology': {
-    image: getUnsplashUrl('1579684385127-1ef15d508118'), // Cells/Microscope
+    image: getUnsplashUrl('1559757175-57efb064d2cd'),
     color: '#10B981',
     bgColor: '#ECFDF5'
   },
 
   // --- Engineering ---
   'Robotics': {
-    image: getUnsplashUrl('1561146126101-3158dc0a4d5e'), // Mechanical arm/Robot
+    image: getUnsplashUrl('1581091010468-7bb49d20c141'),
     color: '#2563EB',
     bgColor: '#EFF6FF'
   },
   'Materials Science': {
-    image: getUnsplashUrl('1581093450021-4a7360e9a6b5'), // Metallic texture/Carbon fiber
+    image: getUnsplashUrl('1579547621113-e4bb2a19bdd6'),
     color: '#475569',
     bgColor: '#F1F5F9'
   },
   'Nanotechnology': {
-    image: getUnsplashUrl('1562835521-16959a4c0045'), // Microchip closeup
+    image: getUnsplashUrl('1581093588401-22e0a4b5cda1'),
     color: '#7C3AED',
     bgColor: '#F5F3FF'
   },
   'Aerospace Engineering': {
-    image: getUnsplashUrl('1517976487492-5750f3195933'), // Rocket launch
+    image: getUnsplashUrl('1504198266285-1659872e6590'),
     color: '#0EA5E9',
     bgColor: '#E0F2FE'
   },
   'Chemical Engineering': {
-    image: getUnsplashUrl('1603126857599-f6e157fa2fe6'), // Chemical plant/tubes
+    image: getUnsplashUrl('1589811675921-2c5c95d441a4'),
     color: '#F59E0B',
     bgColor: '#FFFBEB'
   },
   'Electrical Engineering': {
-    image: getUnsplashUrl('1555664424-778a69032054'), // Circuit board/Soldering
+    image: getUnsplashUrl('1518770660439-4636190af475'),
     color: '#EAB308',
     bgColor: '#FEF9C3'
   },
 
   // --- Social Sciences ---
   'Economics': {
-    image: getUnsplashUrl('1611974765219-03e921c78953'), // Stock chart/Money
+    image: getUnsplashUrl('1520607162513-77705c0f0d4a'),
     color: '#10B981',
     bgColor: '#ECFDF5'
   },
   'Psychology Research': {
-    image: getUnsplashUrl('1507413245164-6160d8298b31'), // Abstract head/thought
+    image: getUnsplashUrl('1508385082359-f38ae991e8f2'),
     color: '#F97316',
     bgColor: '#FFF7ED'
   },
   'Sociology': {
-    image: getUnsplashUrl('1531206715517-5c0ba140b2b8'), // Crowd of people
+    image: getUnsplashUrl('1508214751196-bcfd4ca60f91'),
     color: '#06B6D4',
     bgColor: '#ECFEFF'
   },
   'Political Science': {
-    image: getUnsplashUrl('1541872703-74c5963631df'), // Government building/Pillars
+    image: getUnsplashUrl('1522156373667-4c7234bbd804'),
     color: '#3B82F6',
     bgColor: '#EFF6FF'
   },
 
   // --- Web Development ---
-  'React': {
-    image: getUnsplashUrl('1633356122544-f134324ef6db'), // React code/Atom symbol
+  React: {
+    image: getUnsplashUrl('1555949963-aa79dcee981d'),
     color: '#61DAFB',
     bgColor: '#F0F9FF'
   },
   'Vue.js': {
-    image: getUnsplashUrl('1633356122544-f134324ef6db'), // Code screen
+    image: getUnsplashUrl('1555949963-aa79dcee981d'),
     color: '#4FC08D',
     bgColor: '#ECFDF5'
   },
   'Next.js': {
-    image: getUnsplashUrl('1618477247222-ac59e27621b4'), // Dark modern code
+    image: getUnsplashUrl('1618477247222-ac59e27621b4'),
     color: '#000000',
     bgColor: '#F3F4F6'
   },
-  'TypeScript': {
-    image: getUnsplashUrl('1516116216624-53e697fedbea'), // Organized code
+  TypeScript: {
+    image: getUnsplashUrl('1587620962725-abab7fe55159'),
     color: '#3178C6',
     bgColor: '#EFF6FF'
   },
   'Tailwind CSS': {
-    image: getUnsplashUrl('1507721999472-8ed4421c4af2'), // Palette/Design
+    image: getUnsplashUrl('1503387762-592deb58ef4e'),
     color: '#06B6D4',
     bgColor: '#ECFEFF'
   },
   'Node.js': {
-    image: getUnsplashUrl('1627398242454-45a1465c2479'), // JavaScript code
+    image: getUnsplashUrl('1504805572947-34fad45aed93'),
     color: '#68A063',
     bgColor: '#F0FDF4'
   },
   'Full Stack': {
-    image: getUnsplashUrl('1498050108023-c5249f4df085'), // Laptop with code
+    image: getUnsplashUrl('1498050108023-c5249f4df085'),
     color: '#6366F1',
     bgColor: '#EEF2FF'
   },
 
   // --- Mobile & Backend ---
   'React Native': {
-    image: getUnsplashUrl('1512941937669-90a1b58e7e9c'), // Mobile phone usage
+    image: getUnsplashUrl('1517430816045-df4b7de11d1d'),
     color: '#61DAFB',
     bgColor: '#F0F9FF'
   },
-  'Flutter': {
-    image: getUnsplashUrl('1617042375876-a3a499c90d11'), // App dashboard
+  Flutter: {
+    image: getUnsplashUrl('1611095973785-2614c3922f8b'),
     color: '#02569B',
     bgColor: '#EFF6FF'
   },
-  'Python': {
-    image: getUnsplashUrl('1526379095098-d400e777f72e'), // Python code/Snake abstract
+  Python: {
+    image: getUnsplashUrl('1523475472560-d2df97ec485c'),
     color: '#3776AB',
     bgColor: '#EFF6FF'
   },
-  'Go': {
-    image: getUnsplashUrl('1555066931-4365d14bab8c'), // Fast/Motion blur (Go is fast)
+  Go: {
+    image: getUnsplashUrl('1526374965328-7f61d4dc18c5'),
     color: '#00ADD8',
     bgColor: '#ECFEFF'
   },
-  'Rust': {
-    image: getUnsplashUrl('1518770660439-4636190af475'), // Industrial gears (Rust safe)
+  Rust: {
+    image: getUnsplashUrl('1518770660439-4636190af475'),
     color: '#CE3262',
     bgColor: '#FFF1F2'
   },
-  'Docker': {
-    image: getUnsplashUrl('1605745341117-7c4187198409'), // Shipping containers
+  Docker: {
+    image: getUnsplashUrl('1581091226314-7a8e30b94fda'),
     color: '#2496ED',
     bgColor: '#F0F9FF'
   },
-  'Kubernetes': {
-    image: getUnsplashUrl('1667372393119-3d4c48d07fc9'), // Ship wheel/Helm vibe
+  Kubernetes: {
+    image: getUnsplashUrl('1581091012184-5c2af86d6c33'),
     color: '#316CE6',
     bgColor: '#EFF6FF'
   },
-  'AWS': {
-    image: getUnsplashUrl('1451187580459-43490279c0fa'), // Cloud/Sky
+  AWS: {
+    image: getUnsplashUrl('1501594907352-04cda38ebc29'),
     color: '#FF9900',
     bgColor: '#FFF7ED'
   },
 
   // --- Design & Creative ---
   'UI/UX Design': {
-    image: getUnsplashUrl('1586717791821-3f44a5638d0f'), // Wireframes on paper
+    image: getUnsplashUrl('1559027615-ce3c1b0ed09b'),
     color: '#EC4899',
     bgColor: '#FDF2F8'
   },
   '3D Modeling': {
-    image: getUnsplashUrl('1617791160505-6f00504e35d9'), // 3D abstract render
+    image: getUnsplashUrl('1581093588401-22e0a4b5cda1'),
     color: '#6366F1',
     bgColor: '#EEF2FF'
   },
 
   // --- Other Tech ---
   'Blockchain Development': {
-    image: getUnsplashUrl('1639322537228-f710d846310a'), // Blockchain blocks abstract
+    image: getUnsplashUrl('1611078489935-0cb964de46d6'),
     color: '#F7931A',
     bgColor: '#FFF7ED'
   },
-  'Cybersecurity': {
-    image: getUnsplashUrl('1563986768609-322da13575f3'), // Lock/Digital Security
+  Cybersecurity: {
+    image: getUnsplashUrl('1555949963-ff9fe0c870eb'),
     color: '#F43F5E',
     bgColor: '#FFF1F2'
   },
-  'IoT': {
-    image: getUnsplashUrl('1558346490-51899914d3bd'), // Smart home/Chips
+  IoT: {
+    image: getUnsplashUrl('1581093588401-22e0a4b5cda1'),
     color: '#6B8CFF',
     bgColor: '#EFF6FF'
   }
 };
 
-// --- Helper Functions ---
-
-// Fallback image (Abstract architectural)
+// --- Fallback Image ---
 const DEFAULT_IMAGE = {
   image: getUnsplashUrl('1504384308090-c54beed1f92b'),
   color: '#6366F1',
   bgColor: '#EEF2FF'
 };
 
+// --- Helpers ---
 export function getTagImage(tag) {
-  // Try exact match first
   if (tagImageMap[tag]) return tagImageMap[tag];
-  
-  // Try case-insensitive match
-  const key = Object.keys(tagImageMap).find(k => k.toLowerCase() === tag?.toLowerCase());
+
+  const key = Object.keys(tagImageMap).find(
+    (k) => k.toLowerCase() === tag?.toLowerCase()
+  );
   if (key) return tagImageMap[key];
 
   return DEFAULT_IMAGE;

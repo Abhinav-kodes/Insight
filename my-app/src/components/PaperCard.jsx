@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ThumbsUp, MessageCircle, Bookmark, Share2, 
-  ExternalLink, FileText, Calendar, Sparkles,
-  Coffee, Clock, BookOpen
+  ThumbsUp, Bookmark, ExternalLink, 
+  FileText, Calendar, Coffee, Clock, BookOpen,
+  Newspaper, TrendingUp, Globe
 } from 'lucide-react';
 import { getFirstTagImage } from '../services/tagImageMapper';
 
@@ -18,9 +18,9 @@ const PaperCard = ({
   url,
   pdf_url,
   citations_count,
-  content_type, // 'research_paper' or 'hobby_article'
-  thumbnail,    // From DB (Dev.to cover image)
-  metadata,     // JSONB field with reactions, reading_time, etc.
+  content_type, // 'research_paper', 'hobby_article', or 'news_article'
+  thumbnail,    
+  metadata,     
   scraped_at
 }) => {
   const navigate = useNavigate();
@@ -28,9 +28,13 @@ const PaperCard = ({
   
   // 1. Determine Content Type
   const isPaper = content_type === 'research_paper';
+  const isNews = content_type === 'news_article';
+  const isBlog = content_type === 'hobby_article';
   
-  // 2. Image Logic: DB Thumbnail > Fallback to Tag Mapper > Default
+  // 2. Image Logic
   const tagStyle = getFirstTagImage(tags);
+  // News often has low-res thumbnails, but we prefer them if available. 
+  // Otherwise fall back to the nice tag gradients.
   const displayImage = thumbnail || tagStyle.image;
 
   // 3. Date Formatting
@@ -39,14 +43,15 @@ const PaperCard = ({
     month: 'short', day: 'numeric', year: 'numeric' 
   });
   
-  // 4. Author Formatting
-  const authors = authors_list?.length > 0
-    ? authors_list.slice(0, 2).join(', ') + (authors_list.length > 2 ? ` +${authors_list.length - 2}` : '')
-    : 'Unknown Author';
+  // 4. Author / Source Formatting
+  let sourceOrAuthor = 'Unknown';
+  if (isNews && metadata?.source) {
+    sourceOrAuthor = metadata.source.toUpperCase();
+  } else if (authors_list?.length > 0) {
+    sourceOrAuthor = authors_list.slice(0, 2).join(', ') + (authors_list.length > 2 ? '...' : '');
+  }
 
   const handleCardClick = () => {
-    // Navigate to local detail view for papers, or external link for blogs (optional choice)
-    // For now, let's keep everything internal if we have full text
     navigate(`/paper/${id}`);
   };
 
@@ -62,7 +67,7 @@ const PaperCard = ({
         <img 
           src={displayImage} 
           alt={title} 
-          onError={(e) => { e.target.src = tagStyle.image; }} // Fallback if thumb URL is broken
+          onError={(e) => { e.target.src = tagStyle.image; }} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         
@@ -71,20 +76,33 @@ const PaperCard = ({
 
         {/* --- Categorization Badge --- */}
         <div className="absolute top-4 left-4 flex gap-2">
-          {isPaper ? (
+          {isPaper && (
             <span className="backdrop-blur-md bg-blue-900/40 text-blue-50 text-xs font-bold px-3 py-1 rounded-full border border-blue-200/20 flex items-center gap-1 shadow-sm">
-              <FileText size={12} /> Research Paper
+              <FileText size={12} /> Research
             </span>
-          ) : (
+          )}
+          
+          {isBlog && (
             <span className="backdrop-blur-md bg-emerald-900/40 text-emerald-50 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200/20 flex items-center gap-1 shadow-sm">
               <Coffee size={12} /> Tech Blog
             </span>
           )}
+
+          {isNews && (
+            <span className="backdrop-blur-md bg-purple-900/40 text-purple-50 text-xs font-bold px-3 py-1 rounded-full border border-purple-200/20 flex items-center gap-1 shadow-sm">
+              <Newspaper size={12} /> News
+            </span>
+          )}
           
-          {/* Quality Score or Reading Time Badge */}
-          {!isPaper && metadata?.reading_time && (
+          {/* Extra Badge: Reading Time (Blogs) or Country (News) */}
+          {isBlog && metadata?.reading_time && (
             <span className="backdrop-blur-md bg-black/30 text-white text-xs font-medium px-3 py-1 rounded-full border border-white/20 flex items-center gap-1">
               <Clock size={12} /> {metadata.reading_time} min
+            </span>
+          )}
+          {isNews && metadata?.country && (
+            <span className="backdrop-blur-md bg-black/30 text-white text-xs font-medium px-3 py-1 rounded-full border border-white/20 flex items-center gap-1 uppercase">
+              <Globe size={12} /> {metadata.country[0]}
             </span>
           )}
         </div>
@@ -106,7 +124,9 @@ const PaperCard = ({
               <Calendar size={12} /> {dateStr}
             </span>
             <span>•</span>
-            <span className="text-gray-600 line-clamp-1">By {authors}</span>
+            <span className={`line-clamp-1 ${isNews ? 'font-bold text-[#8B5E3C]' : 'text-gray-600'}`}>
+              {isNews ? 'Via ' : 'By '}{sourceOrAuthor}
+            </span>
           </div>
 
           {/* Description / Summary */}
@@ -120,7 +140,9 @@ const PaperCard = ({
               <span 
                 key={tag} 
                 className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md ${
-                  isPaper ? 'bg-[#F3E5D8] text-[#5C4633]' : 'bg-[#E0F2FE] text-[#0369A1]'
+                  isPaper ? 'bg-[#F3E5D8] text-[#5C4633]' : 
+                  isBlog ? 'bg-[#E0F2FE] text-[#0369A1]' :
+                  'bg-[#F3E8FF] text-[#6B21A8]' // Purple for news tags
                 }`}
               >
                 {tag}
@@ -136,17 +158,23 @@ const PaperCard = ({
         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-gray-400">
            {/* Left: Stats */}
            <div className="flex gap-4">
-             {/* Dynamic Stat: Citations for Papers, Likes for Blogs */}
              <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-               {isPaper ? (
+               {isPaper && (
                  <>
                    <BookOpen size={14} className="text-[#8B5E3C]" />
                    <span>{citations_count || 0} cit.</span>
                  </>
-               ) : (
+               )}
+               {isBlog && (
                  <>
                    <ThumbsUp size={14} className="text-[#059669]" />
                    <span>{metadata?.reactions || 0}</span>
+                 </>
+               )}
+               {isNews && (
+                 <>
+                   <TrendingUp size={14} className="text-purple-600" />
+                   <span>Trending</span>
                  </>
                )}
              </div>
@@ -154,7 +182,7 @@ const PaperCard = ({
 
            {/* Right: Actions */}
            <div className="flex gap-2">
-             {/* Show PDF link only for papers */}
+             {/* PDF Link (Papers) */}
              {isPaper && pdf_url && (
                 <a 
                   href={pdf_url} 
@@ -162,13 +190,12 @@ const PaperCard = ({
                   target="_blank" 
                   rel="noreferrer"
                   className="p-2 hover:bg-[#F3E5D8] rounded-full text-[#5C4633] transition-colors"
-                  title="View PDF"
                 >
                   <ExternalLink size={16} />
                 </a>
              )}
              
-             {/* Show Source link for blogs */}
+             {/* External Link (Blogs & News) */}
              {!isPaper && url && (
                 <a 
                   href={url} 
@@ -176,14 +203,13 @@ const PaperCard = ({
                   target="_blank" 
                   rel="noreferrer"
                   className="p-2 hover:bg-blue-50 rounded-full text-blue-600 transition-colors"
-                  title="Read on Dev.to"
                 >
                   <ExternalLink size={16} />
                 </a>
              )}
 
              <button 
-                onClick={(e) => { e.stopPropagation(); /* Add bookmark logic */ }} 
+                onClick={(e) => { e.stopPropagation(); }} 
                 className="p-2 hover:bg-[#F3E5D8] rounded-full text-[#5C4633] transition-colors"
              >
                <Bookmark size={16} />
