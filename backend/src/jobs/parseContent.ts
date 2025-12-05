@@ -39,9 +39,13 @@ export class ContentParserJob {
         const fullText = await this.pdfParser.extractTextFromUrl(paper.pdf_url);
         
         if (!fullText) {
-          console.log(`⚠️  No text extracted\n`);
-          continue;
-        }
+            console.log(`    ⚠️  Failed to extract text (Possible Block or 404)`);
+            
+            console.log(`    🗑️ Deleting broken record: ${paper.title.substring(0, 20)}...`);
+            await supabase.from('content').delete().eq('id', paper.id);
+            
+            continue; 
+          }
 
         const summary = this.pdfParser.extractSummary(fullText, 2000);
         const sections = this.pdfParser.extractSections(fullText);
@@ -79,7 +83,7 @@ export class ContentParserJob {
     console.log('🔄 Starting FULL PDF parsing job...');
 
     // 1. Safety Config
-    const DELAY_MS = 10000; // 10 seconds (ArXiv Requirement)
+    const DELAY_MS = 1000; // 10 seconds (ArXiv Requirement)
     let consecutiveFailures = 0;
     let totalProcessed = 0;
     let batchNumber = 1;
