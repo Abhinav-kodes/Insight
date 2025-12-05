@@ -47,8 +47,9 @@ const AIDigest = () => {
       setStatus(null);
       setMessage('');
 
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       // Call backend API to generate and send digest
-      const response = await fetch('http://localhost:3000/api/ai/send-digest', {
+      const response = await fetch(`${API_URL}/api/ai/send-digest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

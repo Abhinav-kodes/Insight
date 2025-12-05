@@ -48,7 +48,7 @@ async function runAllFetchJobs() {
             isRunning.parser = true;
             console.log('📄 [2/4] Parsing unparsed PDFs...');
             try {
-                await contentParserJob.parseUnparsedPapers();
+                await contentParserJob.parseAllPapers();
                 console.log('✅ [2/4] PDF parsing complete');
             } catch (error) {
                 console.error('❌ [2/4] PDF parsing failed:', error);
@@ -61,9 +61,9 @@ async function runAllFetchJobs() {
         // 3. Fetch Dev.to Articles
         if (!isRunning.devto) {
             isRunning.devto = true;
-            console.log('👩‍💻 [3/4] Fetching Dev.to articles (last 24h)...');
+            console.log('👩‍💻 [3/4] Fetching Dev.to articles (last 160h)...');
             try {
-                await devToFetchJob.fetchAndSaveArticles(24);
+                await devToFetchJob.fetchAndSaveArticles(160);
                 console.log('✅ [3/4] Dev.to fetch complete');
             } catch (error) {
                 console.error('❌ [3/4] Dev.to fetch failed:', error);

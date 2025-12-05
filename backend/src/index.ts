@@ -28,7 +28,15 @@ const PORT = process.env.PORT || 3000;
 
 // CORS Configuration - MUST be before routes
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+  origin: ['http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+    'http://210.79.129.218',      
+    'http://210.79.129.218:80',  
+    'https://210.79.129.218',
+    'https://insights.is-a.software',
+    'http://insights.is-a.software'
+    ] ,  
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

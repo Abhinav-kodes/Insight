@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000';
+const PORT = process.env.PORT || 3000;
+const API_URL = `http://127.0.0.1:${PORT}`;
 
 // Define the shape of the data so TypeScript is happy
 interface ParseStatus {

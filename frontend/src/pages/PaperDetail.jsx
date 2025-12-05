@@ -116,7 +116,9 @@ const PaperDetail = () => {
       setSummaryError('');
       setAiSummary('');
 
-      const response = await fetch('http://localhost:3000/api/ai/summarize', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+      const response = await fetch(`${API_URL}/api/ai/summarize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +163,8 @@ const PaperDetail = () => {
       setFaqLoading(true);
 
       // 2. Call AI API
-      const response = await fetch('http://localhost:3000/api/ai/ask', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/ai/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,10 +220,12 @@ const PaperDetail = () => {
     });
   };
 
+  const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
   const getProxiedPdfUrl = () => {
     if (!paper.arxiv_id) return paper.pdf_url;
     // Proxies through your backend to avoid CORS issues with ArXiv
-    return `http://localhost:3000/api/pdf/proxy/${paper.arxiv_id}`;
+    return `${API_URL}/api/pdf/proxy/${paper.arxiv_id}`;
   };
 
   const renderSummary = (text) => {
