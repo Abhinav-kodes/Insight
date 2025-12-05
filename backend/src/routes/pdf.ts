@@ -2,40 +2,45 @@ import express from 'express';
 
 const router = express.Router();
 
-// Proxy PDF endpoint
 router.get('/proxy/:arxivId', async (req, res) => {
   try {
     const { arxivId } = req.params;
     
-    // Construct ArXiv PDF URL
-    const pdfUrl = `https://arxiv.org/pdf/${arxivId}.pdf`;
+    // 1. Use Export Mirror
+    const pdfUrl = `https://export.arxiv.org/pdf/${arxivId}.pdf`;
     
     console.log(`🔄 Proxying PDF: ${pdfUrl}`);
     
-    // Fetch from ArXiv
+    // 2. Polite Headers
     const response = await fetch(pdfUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+        'User-Agent': 'InsightEngine/1.0 (mailto:abhinav.2428cse938@kiet.edu)',
+        'Accept': 'application/pdf'
       }
     });
     
     if (!response.ok) {
-      throw new Error(`ArXiv returned ${response.status}`);
+        throw new Error(`ArXiv returned ${response.status}`);
+    }
+
+    // 3. Check for HTML (Block)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+        throw new Error('ArXiv returned HTML (Blocked)');
     }
     
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    // 4. Send Data
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     
-    // Stream the PDF
-    const buffer = await response.arrayBuffer();
-    res.send(Buffer.from(buffer));
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    res.send(buffer);
     
   } catch (error) {
     console.error('PDF proxy error:', error);
-    res.status(500).json({ error: 'Failed to proxy PDF' });
+    res.status(500).send('Failed to load PDF');
   }
 });
 
