@@ -76,13 +76,22 @@ export class ContentParserJob {
 
   // NEW: Parse ALL papers in batches
   async parseAllPapers(): Promise<void> {
-    console.log('🔄 Starting FULL PDF parsing job (all papers)...');
-    console.log('⏳ This will take a while - processing in batches\n');
+    console.log('🔄 Starting FULL PDF parsing job...');
 
+    // 1. Safety Config
+    const DELAY_MS = 10000; // 10 seconds (ArXiv Requirement)
+    let consecutiveFailures = 0;
     let totalProcessed = 0;
     let batchNumber = 1;
 
     while (true) {
+      if (consecutiveFailures >= 3) {
+        console.error('\n🛑 CIRCUIT BREAKER TRIPPED');
+        console.error('   ArXiv is blocking requests. Stopping job to prevent long-term ban.');
+        console.error('   PLEASE WAIT 2-4 HOURS BEFORE RESTARTING.');
+        break;
+      }
+
       console.log(`\n📦 Processing batch ${batchNumber}...`);
 
       const { data: papers, error } = await supabase
@@ -90,30 +99,36 @@ export class ContentParserJob {
         .select('id, arxiv_id, pdf_url, title')
         .eq('content_type', 'research_paper')
         .is('full_text', null)
-        .limit(10);  // Process 10 at a time
+        .limit(5); // Smaller batch size is safer
 
       if (error || !papers || papers.length === 0) {
         console.log('✅ All papers have been parsed!');
         break;
       }
 
-      console.log(`📚 Parsing ${papers.length} papers in batch ${batchNumber}`);
-
       for (const paper of papers) {
+        // Double check circuit breaker inside loop
+        if (consecutiveFailures >= 3) break;
+
         try {
-          console.log(`  📖 [${totalProcessed + 1}] ${paper.title.substring(0, 60)}...`);
+          console.log(`  📖 [${totalProcessed + 1}] ${paper.title.substring(0, 40)}...`);
           
           if (!paper.pdf_url) {
             console.log(`    ⚠️  No PDF URL`);
             continue;
           }
 
+          // 3. Try parsing
           const fullText = await this.pdfParser.extractTextFromUrl(paper.pdf_url);
           
           if (!fullText) {
-            console.log(`    ⚠️  No text extracted`);
+            console.log(`    ⚠️  Failed to extract text (Possible Block)`);
+            consecutiveFailures++; // Increment failure count
             continue;
           }
+
+          // If successful, reset failure count
+          consecutiveFailures = 0;
 
           const summary = this.pdfParser.extractSummary(fullText, 2000);
           const sections = this.pdfParser.extractSections(fullText);
@@ -129,16 +144,19 @@ export class ContentParserJob {
             .eq('id', paper.id);
 
           if (updateError) {
-            console.error(`    ❌ Error:`, updateError.message);
+            console.error(`    ❌ DB Error:`, updateError.message);
           } else {
-            console.log(`    ✅ Parsed`);
+            console.log(`    ✅ Parsed successfully`);
             totalProcessed++;
           }
 
-          await delay(2000);
+          // 4. The "Polite" Delay
+          console.log(`    ⏳ Waiting ${DELAY_MS/1000}s...`);
+          await delay(DELAY_MS);
 
         } catch (error) {
           console.error(`    ❌ Error:`, error);
+          consecutiveFailures++;
         }
       }
 
